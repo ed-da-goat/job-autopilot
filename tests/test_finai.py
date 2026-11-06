@@ -10,12 +10,13 @@ from typer.testing import CliRunner
 from jobhunt import cli as cli_module
 from jobhunt import db as db_module
 from jobhunt import finai as finai_module
-from jobhunt.eligibility import SearchPreferences
+from jobhunt.eligibility import LaneConfig, SearchPreferences
 
 PREFS = SearchPreferences(
     version=1, allowed_countries=("US",), allow_us_remote=True, max_eligible_years=3,
     review_years_max=5, blocked_title_terms=("senior", "sr", "director", "head of"),
     review_title_terms=(), target_roles=(), target_start="", required_application_fields=(),
+    lane=LaneConfig(preset="finance_ai"),
 )
 AI_DESC = "We use machine learning and Python automation for our desks."
 FIN_DESC = "Our fintech platform serves banks and wealth managers."  # 3 distinct terms

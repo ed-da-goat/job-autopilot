@@ -23,13 +23,14 @@ from jobhunt import finai, funnel
 from jobhunt.connectors import claude_cli, openrouter
 from jobhunt.connectors.claude_cli import SubscriptionUnavailableError
 from jobhunt.connectors.openrouter import SpendGateError
-from jobhunt.eligibility import SearchPreferences
+from jobhunt.eligibility import LaneConfig, SearchPreferences
 from jobhunt.resume import docx_resume
 
 PREFS = SearchPreferences(
     version=1, allowed_countries=("US",), allow_us_remote=True, max_eligible_years=3,
     review_years_max=5, blocked_title_terms=("senior", "sr", "director", "head of"),
     review_title_terms=(), target_roles=(), target_start="", required_application_fields=(),
+    lane=LaneConfig(preset="finance_ai"),
 )
 
 JD_BODY = (

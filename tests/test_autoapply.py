@@ -35,7 +35,7 @@ from jobhunt.apply_assist import submitwatch
 from jobhunt.apply_assist.schema import FieldSpec, FillOutcome, Resolution
 from jobhunt.autoapply import AutoApplyConfig
 from jobhunt.connectors.openrouter import SpendGateError
-from jobhunt.eligibility import SearchPreferences
+from jobhunt.eligibility import LaneConfig, SearchPreferences
 
 REAL_CONNECT = db_module.connect
 REAL_RECORD_BLOCKERS = submitwatch.record_blockers
@@ -44,6 +44,7 @@ PREFS = SearchPreferences(
     version=1, allowed_countries=("US",), allow_us_remote=True, max_eligible_years=3,
     review_years_max=5, blocked_title_terms=("senior", "sr", "director", "head of"),
     review_title_terms=(), target_roles=(), target_start="", required_application_fields=(),
+    lane=LaneConfig(preset="finance_ai"),
 )
 AI_DESC = "We use machine learning and Python automation for our desks."
 BASE_TIME = datetime(2026, 10, 28, 12, 0)

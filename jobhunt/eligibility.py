@@ -189,6 +189,47 @@ class SearchPreferences:
     home_state: str = ""
     city_tiers: tuple[tuple[int, tuple[str, ...]], ...] = ()
     standing_answers: StandingAnswers = field(default_factory=StandingAnswers)
+    lane: "LaneConfig" = field(default_factory=lambda: LaneConfig())
+
+
+LANE_PRESETS = ("target_roles", "finance_ai")
+
+
+@dataclass(frozen=True)
+class LaneConfig:
+    """The auto-apply candidate lane (the [lane] table). See the template for each key."""
+
+    preset: str = "target_roles"
+    include_title_terms: tuple[str, ...] = ()  # empty -> target_roles
+    exclude_title_terms: tuple[str, ...] = ()
+    require_jd_terms: tuple[str, ...] = ()  # any-of in the JD; empty -> not required
+    min_score: int | None = None
+    max_tier: int | None = None
+
+
+def load_lane(raw: object) -> LaneConfig:
+    if raw is None:
+        return LaneConfig()
+    if not isinstance(raw, dict):
+        raise ValueError("[lane] must be a table")
+    preset = str(raw.get("preset", "target_roles"))
+    if preset not in LANE_PRESETS:
+        raise ValueError(f"[lane] preset must be one of {', '.join(LANE_PRESETS)}, got {preset!r}")
+
+    def terms(key: str) -> tuple[str, ...]:
+        return tuple(str(t).strip() for t in raw.get(key, []) if str(t).strip())
+
+    def opt_int(key: str) -> int | None:
+        return None if raw.get(key) is None else int(raw[key])
+
+    return LaneConfig(
+        preset=preset,
+        include_title_terms=terms("include_title_terms"),
+        exclude_title_terms=terms("exclude_title_terms"),
+        require_jd_terms=terms("require_jd_terms"),
+        min_score=opt_int("min_score"),
+        max_tier=opt_int("max_tier"),
+    )
 
 
 @dataclass
@@ -234,6 +275,7 @@ def load_preferences(path: Path | None = None) -> SearchPreferences:
             for entry in data.get("city_tiers", [])
         ),
         standing_answers=load_standing_answers(data.get("standing_answers")),
+        lane=load_lane(data.get("lane")),
     )
 
 

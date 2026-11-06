@@ -68,6 +68,8 @@ Prerequisites:
 
    The fields that matter: `candidate_name` and `contact_email` (output file names and the HTTP User-Agent), `target_roles`, `allowed_countries` and `allow_us_remote`, `max_eligible_years` and `review_years_max`, `blocked_title_terms` and `review_title_terms` (titles dropped or sent to a review queue), and the `[[city_tiers]]` location ranking.
 
+   The `[lane]` table decides which postings auto-apply works on. The default preset, `target_roles`, takes titles matching your `target_roles` (or `include_title_terms`), drops `exclude_title_terms` (the template excludes senior, contract and part-time roles), keeps configured cities and US-remote roles, and can require JD keywords (`require_jd_terms`) or a `min_score`. `preset = "finance_ai"` switches to the author's original finance × AI routing.
+
    The `[standing_answers]` table holds the answers auto-apply may give for you: earliest start, salary, travel, current employer, school and similar. It **fails closed**: delete any key you do not want answered, and an unset answer is never guessed. The field is asked and the form is handed to you instead. Every value must be true of you.
 
 2. **Add your profile and facts.**
@@ -153,7 +155,6 @@ make ui-test    # frontend tests (vitest)
 
 ## Known limits
 
-- The auto-apply candidate pool (`jobhunt/finai.py`) is still tuned to the author's finance × AI search. Scoring and the eligibility gate read your config, but the lane's title and employer filters do not yet. Until they do, review what it picks during the dry runs.
 - Handoff mode needs you at the machine: the forms wait in browser tabs for your click.
 - Scheduling is macOS-only (launchd). Everything else runs anywhere Python and Node do.
 

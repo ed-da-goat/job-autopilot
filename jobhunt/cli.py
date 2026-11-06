@@ -418,7 +418,7 @@ def sheets_sync(dry_run: bool = SHEETS_DRY_RUN_OPTION) -> None:
         conn.close()
 
 
-finai_app = typer.Typer(help="Finance x AI lane: candidates, guarded JD, match-report log.")
+finai_app = typer.Typer(help="Auto-apply lane (see [lane] in the search preferences): candidates, guarded JD, match-report log.")
 app.add_typer(finai_app, name="finai")
 
 
@@ -426,7 +426,7 @@ app.add_typer(finai_app, name="finai")
 def finai_candidates(
     limit: int = typer.Option(25, "--limit"),
     as_json: bool = typer.Option(False, "--json", help="Print a JSON list instead of text lines."),
-    max_tier: int = typer.Option(4, "--max-tier", help="Worst city tier to include (1=NYC .. 4=US remote)."),
+    max_tier: int = typer.Option(4, "--max-tier", help="Worst city tier to include (remote sorts after the last configured city tier; [lane] max_tier overrides)."),
 ) -> None:
     """Ranked in-lane postings not yet worked. Deterministic, no network, no LLM."""
     conn = db_module.connect()

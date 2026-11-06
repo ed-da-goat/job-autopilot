@@ -1,4 +1,8 @@
-"""`finai`: finance x AI lane selection, JD reading, and match-report logging.
+"""`finai`: auto-apply lane selection, JD reading, and match-report logging.
+
+The lane is chosen by `[lane] preset` in the search preferences: `target_roles`
+(default; postings whose title matches the configured target roles) or
+`finance_ai` (the original finance x AI routes A/B/C).
 
 Deterministic and offline. The recruiter-style scoring and rewriting happen in
 the Claude Code session (subscription); this module only picks candidates,
@@ -90,15 +94,16 @@ US_HINT = _rx(["united states", "usa", "u.s.", "us", "america"])
 INTL_HINT = _rx(sorted(eligibility.INTERNATIONAL_MARKERS))
 
 
-def city_tier(location: str | None) -> int | None:
-    """Best (lowest) tier across every location named; None when out of lane."""
+def city_tier(location: str | None, remote_tier: int = 4) -> int | None:
+    """Best (lowest) tier across every location named; None when out of lane.
+    Remote-US (or bare "Remote") postings get `remote_tier`."""
     loc = location or ""
     for tier, pattern in CITY_TIERS:
         if pattern.search(loc):
             return tier
     if REMOTE.search(loc) and not INTL_HINT.search(loc):
         if US_HINT.search(loc) or re.fullmatch(r"\W*remote\W*", loc, re.IGNORECASE):
-            return 4
+            return remote_tier
     return None
 
 
@@ -144,29 +149,69 @@ def _title_blocked(title: str, blocked_terms: tuple[str, ...]) -> bool:
     return any(eligibility._contains(title, t) for t in (*blocked_terms, *EXTRA_BLOCKED))
 
 
-def candidates(
-    conn: sqlite3.Connection, *, limit: int = 25, max_tier: int = 4
-) -> list[dict[str, Any]]:
-    """Ranked in-lane postings not yet worked: tier asc, route (A, B, then C), score desc (NULL last), posted_at desc."""
-    blocked = eligibility.load_preferences().blocked_title_terms
-    worked = ",".join("?" * len(WORKED_STAGES))
-    rows = conn.execute(
-        f"""SELECT p.id, p.company, p.title, p.location, p.url, p.posted_at, c.category,
+_ROW_SQL = f"""SELECT p.id, p.company, p.title, p.location, p.url, p.posted_at, c.category,
                    (SELECT total FROM scores s WHERE s.posting_id = p.id
                     ORDER BY s.rubric_version DESC LIMIT 1) AS score
             FROM postings p
             LEFT JOIN companies c ON c.name = p.company
             WHERE p.status = 'active' AND p.duplicate_of IS NULL
               AND NOT EXISTS (SELECT 1 FROM funnel f WHERE f.posting_id = p.id
-                              AND f.stage IN ({worked}))""",
-        WORKED_STAGES,
-    ).fetchall()
+                              AND f.stage IN ({",".join("?" * len(WORKED_STAGES))}))"""
+
+
+def _lane_rows(conn: sqlite3.Connection) -> tuple[list[sqlite3.Row], set[int]]:
+    """Active, non-duplicate, not-worked postings, plus the ids that already have a match report."""
+    rows = conn.execute(_ROW_SQL, WORKED_STAGES).fetchall()
     # artifacts has no posting_id index, so a per-row NOT EXISTS is a full scan each time.
     reported = {
         r[0] for r in conn.execute(
             "SELECT DISTINCT posting_id FROM artifacts WHERE kind = ?", (REPORT_KIND,))
     }
+    return rows, reported
 
+
+def _description(conn: sqlite3.Connection, posting_id: int) -> str:
+    # The big raw_json blob is read only for postings that survived the cheap gates.
+    full = conn.execute("SELECT source, title, raw_json FROM postings WHERE id=?", (posting_id,)).fetchone()
+    return text_extract.extract_text(full)[1]
+
+
+def _entry(r: sqlite3.Row, tier: int, route: str) -> dict[str, Any]:
+    return {
+        "id": r["id"], "company": r["company"] or "", "title": r["title"] or "",
+        "location": r["location"] or "", "city_tier": tier, "route": route,
+        "url": r["url"] or "", "score": r["score"], "_posted": r["posted_at"] or "",
+    }
+
+
+def _rank(found: list[dict[str, Any]], route_first: bool) -> list[dict[str, Any]]:
+    # Stable multi-pass sort: least significant key first.
+    found.sort(key=lambda d: d["_posted"], reverse=True)
+    found.sort(key=lambda d: -(d["score"] if d["score"] is not None else -1))
+    found.sort(key=(lambda d: (d["city_tier"], d["route"])) if route_first else (lambda d: d["city_tier"]))
+    for d in found:
+        del d["_posted"]
+    return found
+
+
+def candidates(
+    conn: sqlite3.Connection, *, limit: int = 25, max_tier: int = 4
+) -> list[dict[str, Any]]:
+    """Ranked in-lane postings not yet worked, for the configured `[lane] preset`.
+
+    finance_ai: tier asc, route (A, B, then C), score desc (NULL last), posted_at desc.
+    target_roles: tier asc (remote after the last city tier), score desc (NULL last), posted_at desc."""
+    prefs = eligibility.load_preferences()
+    if prefs.lane.preset == "finance_ai":
+        return _finance_ai_candidates(conn, prefs, limit, max_tier)
+    return _target_roles_candidates(conn, prefs, limit, max_tier)
+
+
+def _finance_ai_candidates(
+    conn: sqlite3.Connection, prefs: eligibility.SearchPreferences, limit: int, max_tier: int
+) -> list[dict[str, Any]]:
+    blocked = prefs.blocked_title_terms
+    rows, reported = _lane_rows(conn)
     found: list[dict[str, Any]] = []
     for r in rows:
         if r["id"] in reported:
@@ -175,27 +220,55 @@ def candidates(
         tier = city_tier(r["location"])
         if tier is None or tier > max_tier or _title_blocked(title, blocked):
             continue
-        # Cheap title/location gates first; the big raw_json blob is read only for survivors.
+        # Cheap title/location gates first.
         if not (FINANCE_TITLE.search(title) or TECH_CUSTOMER_TITLE.search(title)):
             continue
-        full = conn.execute("SELECT source, title, raw_json FROM postings WHERE id=?", (r["id"],)).fetchone()
-        _, description, _ = text_extract.extract_text(full)
-        route = lane_route(title, description, r["category"], r["company"] or "")
+        route = lane_route(title, _description(conn, r["id"]), r["category"], r["company"] or "")
         if route is None:
             continue
-        found.append({
-            "id": r["id"], "company": r["company"] or "", "title": title,
-            "location": r["location"] or "", "city_tier": tier, "route": route,
-            "url": r["url"] or "", "score": r["score"], "_posted": r["posted_at"] or "",
-        })
+        found.append(_entry(r, tier, route))
+    return _rank(found, route_first=True)[:limit]
 
-    # Stable multi-pass sort: least significant key first.
-    found.sort(key=lambda d: d["_posted"], reverse=True)
-    found.sort(key=lambda d: -(d["score"] if d["score"] is not None else -1))
-    found.sort(key=lambda d: (d["city_tier"], d["route"]))
-    for d in found:
-        del d["_posted"]
-    return found[:limit]
+
+def _target_roles_candidates(
+    conn: sqlite3.Connection, prefs: eligibility.SearchPreferences, limit: int, max_tier: int
+) -> list[dict[str, Any]]:
+    lane = prefs.lane
+    include_terms = list(lane.include_title_terms or prefs.target_roles)
+    if not include_terms:
+        return []  # no include terms and no target_roles: nothing can match
+    include = _rx(include_terms)
+    exclude = _rx(list(lane.exclude_title_terms)) if lane.exclude_title_terms else None
+    jd_terms = _rx(list(lane.require_jd_terms)) if lane.require_jd_terms else None
+    cap = lane.max_tier if lane.max_tier is not None else max_tier
+    # Remote sorts after every configured city tier.
+    remote_tier = max((t for t, _ in CITY_TIERS), default=0) + 1
+    rows, reported = _lane_rows(conn)
+    found: list[dict[str, Any]] = []
+    for r in rows:
+        if r["id"] in reported:
+            continue
+        title = r["title"] or ""
+        if not include.search(title) or (exclude and exclude.search(title)) \
+                or _title_blocked(title, prefs.blocked_title_terms):
+            continue
+        tier = _target_tier(r["location"], prefs, remote_tier)
+        if tier is None or tier > cap:
+            continue
+        if lane.min_score is not None and (r["score"] is None or r["score"] < lane.min_score):
+            continue
+        if jd_terms and not jd_terms.search(_description(conn, r["id"])):
+            continue
+        found.append(_entry(r, tier, "T"))
+    return _rank(found, route_first=False)[:limit]
+
+
+def _target_tier(location: str | None, prefs: eligibility.SearchPreferences, remote_tier: int) -> int | None:
+    """A configured city tier, or (when allow_us_remote) remote with no international marker."""
+    tier = city_tier(location, remote_tier)
+    if tier == remote_tier:
+        return tier if prefs.allow_us_remote and "US" in prefs.allowed_countries else None
+    return tier
 
 
 def format_candidate(d: dict[str, Any]) -> str:

@@ -1,7 +1,7 @@
 """Unattended apply orchestrator for Greenhouse, Lever and Ashby postings.
 
 Spec: specs/2026-10-23-autoapply.md, section C. One run takes postings from the
-finance x AI lane (plus anything already tailored and at stage `ready`), tailors
+lane configured in `[lane]` (plus anything already tailored and at stage `ready`), tailors
 the resume, opens the application form in ONE browser (one page per posting),
 fills it, runs the submit gate, and, only when armed, HANDS the filled form to the candidate:
 the pipeline never clicks Submit (cfg.handoff, on by default). It lifts the submit guard,

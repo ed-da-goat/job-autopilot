@@ -53,6 +53,31 @@ cities = [
     "lehi",
 ]
 
+# Auto-apply candidate lane: which postings the unattended pipeline considers, and in what
+# order. A posting must be active, not a duplicate, not already worked, not yet reported, and
+# have an acceptable location (a city tier above, or remote when allow_us_remote is true and
+# "US" is in allowed_countries). Ranked by location tier (remote after the last city tier),
+# then score (highest first), then posted date (newest first).
+[lane]
+# "target_roles" (default): the title must match include_title_terms (below) and no exclude or
+#   blocked term. "finance_ai": the original finance x AI routes (A/B/C); the other [lane] keys
+#   are ignored, and title/JD matching uses its built-in finance and AI term lists.
+preset = "target_roles"
+# Title terms that put a posting in the lane. Whole-word, case-insensitive; a trailing "*"
+# allows any word suffix ("engineer*" matches engineers). Defaults to target_roles above.
+# include_title_terms = ["software engineer", "backend engineer"]
+# Title terms that drop a posting even when it matches (blocked_title_terms and intern/co-op
+# titles are always dropped too).
+exclude_title_terms = ["senior", "sr", "contract", "part-time"]
+# Any-of terms the job description must contain. Same matching rules as include_title_terms.
+# Empty or unset means the JD is not checked.
+# require_jd_terms = ["python", "typescript"]
+# Minimum rubric score (integer). Unset means no minimum; unscored postings fail when set.
+# min_score = 60
+# Worst location tier to include. Unset means no limit beyond the --max-tier option (4).
+# Set this if you configure more than three city tiers so remote stays reachable.
+# max_tier = 4
+
 # The candidate's standing application answers (apply_assist/solve.py), used only by the
 # unattended lane. FAIL CLOSED: delete or leave out any key you do not want answered for
 # you; an unset key is never guessed, the field is asked and handed to you instead. Every
