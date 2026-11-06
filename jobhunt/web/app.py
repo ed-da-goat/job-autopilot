@@ -63,6 +63,15 @@ templates.env.globals["score_badge_style"] = score_badge_style
 templates.env.globals["score_bar_style"] = score_bar_style
 templates.env.filters["from_json"] = json.loads
 
+# Set by `make demo` (JOBHUNT_DEMO=1): marks every page as synthetic data.
+DEMO_MODE = os.environ.get("JOBHUNT_DEMO") == "1"
+DEMO_BADGE = (
+    '<div style="position:fixed;top:0;right:0;z-index:99999;background:#f5b800;color:#111;'
+    'font:700 12px/1 system-ui,sans-serif;padding:6px 12px;letter-spacing:.08em;'
+    'border-bottom-left-radius:6px">DEMO DATA</div>'
+)
+templates.env.globals["demo_mode"] = DEMO_MODE
+
 
 def get_db_path() -> Path:
     """Overridden in tests via app.dependency_overrides to point at a tmp_path DB."""
@@ -147,6 +156,9 @@ def spa_home() -> FileResponse:
             status_code=503,
             detail="React UI is not built. Run `make ui-build`, then reload.",
         )
+    if DEMO_MODE:
+        # `make demo` only: stamp a fixed badge into the built SPA without rebuilding it.
+        return HTMLResponse(SPA_INDEX.read_text(encoding="utf-8").replace("</body>", DEMO_BADGE + "</body>", 1))
     return FileResponse(SPA_INDEX)
 
 

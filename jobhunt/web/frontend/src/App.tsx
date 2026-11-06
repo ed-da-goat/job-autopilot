@@ -102,7 +102,7 @@ export function App() {
       <nav>{views.map(([name, Icon]) => <button key={name} className={view === name ? "active" : ""} onClick={() => setView(name)}><Icon size={17}/>{name}</button>)}</nav>
       <button className="command-button" onClick={() => setSearchOpen(true)}><Search size={16}/> Search <kbd>⌘K</kbd></button>
       <a className="legacy" href="/legacy">Legacy workspace</a>
-      <div className="privacy">Local only<br/><span>No automatic sends or submissions</span></div>
+      <div className="privacy">Local only<br/><span>Auto-submit only when you arm it</span></div>
     </aside>
     <main>
       {notice && <div className="notice" role="status">{notice}<button onClick={() => setNotice("")}><X size={14}/></button></div>}

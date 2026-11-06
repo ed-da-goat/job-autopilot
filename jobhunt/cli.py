@@ -230,6 +230,35 @@ def harvest(
 
 
 @app.command()
+def demo(
+    db_path: str = typer.Option(
+        "data/demo.db", "--db", help="Where to write the synthetic demo database."
+    ),
+    reset: bool = typer.Option(False, "--reset", help="Delete an existing demo database first."),
+) -> None:
+    """Seed a synthetic demo database (no profile, network, LLM, or keys needed)."""
+    from jobhunt import demo as demo_module
+
+    path = Path(db_path)
+    if not path.is_absolute():
+        path = Path.cwd() / path
+    if demo_module._is_default_db(path):
+        typer.echo(f"Refusing to write demo data to the real database: {db_module.DEFAULT_DB_PATH}", err=True)
+        raise typer.Exit(1)
+    if path.exists() and path.stat().st_size > 0:
+        if not reset:
+            typer.echo(f"{path} already exists; pass --reset to rebuild it.", err=True)
+            raise typer.Exit(1)
+        for suffix in ("", "-wal", "-shm"):
+            Path(str(path) + suffix).unlink(missing_ok=True)
+    summary = demo_module.seed(path)
+    funnel_line = ", ".join(f"{k} {v}" for k, v in sorted(summary["funnel"].items()))
+    typer.echo(f"Seeded {summary['postings']} synthetic postings at {path} ({funnel_line}).")
+    typer.echo(f"Next: JOBHUNT_DEMO=1 JOBHUNT_DB_PATH={path} uv run uvicorn jobhunt.web.app:app --port 8787")
+    typer.echo("Or just run: make demo")
+
+
+@app.command()
 def counts() -> None:
     """Row counts per source: total/active/new-this-week + last sweep per source."""
     conn = db_module.connect()

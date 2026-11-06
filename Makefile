@@ -1,4 +1,4 @@
-.PHONY: seed harvest counts score sample test report resweep ui ui-local ui-install ui-test ui-build daily daily-dry schedule-install apply-queue autoapply schedule-install-autoapply watch watch-dry schedule-install-watch schedule-remove-watch clean-pyc
+.PHONY: demo seed harvest counts score sample test report resweep ui ui-local ui-install ui-test ui-build daily daily-dry schedule-install apply-queue autoapply schedule-install-autoapply watch watch-dry schedule-install-watch schedule-remove-watch clean-pyc
 
 # Never let stale bytecode outlive its source. A timestamp+size-validated .pyc
 # survives an in-place edit that changes neither (e.g. swapping SCHEMA_VERSION
@@ -37,6 +37,12 @@ resweep:
 
 ui:
 	uv run uvicorn jobhunt.web.app:app --host 127.0.0.1 --port 8787
+
+# One-command synthetic demo: no profile, network, LLM, or keys. Never touches data/jobhunt.db.
+demo:
+	@test -f jobhunt/web/static/spa/index.html || $(MAKE) ui-build
+	uv run python -m jobhunt demo --db data/demo.db --reset
+	JOBHUNT_DEMO=1 JOBHUNT_DB_PATH=data/demo.db uv run uvicorn jobhunt.web.app:app --host 127.0.0.1 --port 8787
 
 ui-local:
 	JOBHUNT_LLM_BASE_URL=http://localhost:11434/v1 \

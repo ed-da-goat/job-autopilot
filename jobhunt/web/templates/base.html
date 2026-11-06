@@ -9,7 +9,7 @@
 </head>
 <body>
   <header class="topbar">
-    <span class="brand">job-hunt</span>
+    <span class="brand">job-hunt</span>{% if demo_mode %} <strong style="background:#f5b800;color:#111;padding:2px 8px;border-radius:4px">DEMO DATA</strong>{% endif %}
     <nav>
       <a href="/legacy" class="{{ 'active' if active == 'today' else '' }}">Today</a>
       <a href="/pipeline" class="{{ 'active' if active == 'board' else '' }}">Pipeline</a>
