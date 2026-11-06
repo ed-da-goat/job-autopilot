@@ -45,7 +45,7 @@ flowchart LR
 ## Try it in 60 seconds
 
 ```bash
-git clone <this-repo-url> job-autopilot && cd job-autopilot
+git clone https://github.com/ed-da-goat/job-autopilot.git && cd job-autopilot
 uv sync
 make demo
 ```
