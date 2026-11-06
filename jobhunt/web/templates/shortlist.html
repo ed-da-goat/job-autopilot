@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Shortlist — job-hunt{% endblock %}
+{% block content %}
+<h1>Shortlist <span class="muted">(live, rubric-scored, one row per company)</span></h1>
+<table>
+  <thead>
+    <tr><th>Rank</th><th>Score</th><th>Company</th><th>Title</th><th>Location</th><th>Why you</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for e in entries %}
+    <tr>
+      <td>{{ e.rank }}</td>
+      <td><span class="badge" style="{{ score_badge_style(e.row.total) }}">{{ e.row.total }}</span></td>
+      <td><a href="{{ e.row.url }}" target="_blank" rel="noopener">{{ e.row.company }}</a></td>
+      <td>
+        {{ e.row.title }}
+        {% if e.extra_count > 0 %}
+        <details>
+          <summary>+{{ e.extra_count }} more role{{ 's' if e.extra_count != 1 else '' }}</summary>
+          <ul class="extra-roles">
+            {% for r in e.extra_roles %}
+            <li><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.title }}</a> ({{ r.total }}, {{ r.location or 'n/a' }})</li>
+            {% endfor %}
+          </ul>
+        </details>
+        {% endif %}
+      </td>
+      <td>{{ e.row.location or '' }}</td>
+      <td class="muted">{{ e.why }}</td>
+      <td>
+        {% if e.qualified %}
+          <span class="muted">qualified</span>
+        {% else %}
+          <form hx-post="/qualify/{{ e.row.posting_id }}" hx-swap="none" style="display:flex;gap:4px;">
+            <select name="tier">
+              <option value="">no tier</option>
+              {% for t in tiers %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+            </select>
+            <button type="submit">Qualify</button>
+          </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" class="empty">No scores yet — run `score` or `resweep` first.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

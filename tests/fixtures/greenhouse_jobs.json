@@ -1,0 +1,18 @@
+{
+  "jobs": [
+    {
+      "id": 1001,
+      "title": "Backend Engineer",
+      "absolute_url": "https://boards.greenhouse.io/acme/jobs/1001",
+      "location": {"name": "San Francisco, CA"},
+      "updated_at": "2026-07-10T12:00:00-00:00"
+    },
+    {
+      "id": 1002,
+      "title": "Forward Deployed Engineer",
+      "absolute_url": "https://boards.greenhouse.io/acme/jobs/1002",
+      "location": {"name": "Remote"},
+      "updated_at": "2026-07-12T09:30:00-00:00"
+    }
+  ]
+}

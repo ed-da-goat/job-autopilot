@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Today — job-hunt{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div><h1>Today</h1><p class="muted">Triage the right work, then execute it manually.</p></div>
+  <div class="indicators">
+    <div class="indicator {{ 'warn' if report.applications_7d < 10 else '' }}"><span class="n">{{ report.applications_7d }}</span>/10 applications</div>
+    <div class="indicator {{ 'warn' if report.warm_touches_7d < 5 else '' }}"><span class="n">{{ report.warm_touches_7d }}</span>/5 warm touches</div>
+    <div class="indicator"><span class="n">{{ report.new_postings_7d }}</span>new after baseline</div>
+  </div>
+</div>
+
+{% if not data.health.healthy %}
+<div class="panel health-warn">
+  <h2>Source health needs attention</h2>
+  <div class="health-grid">
+  {% for source in data.health.sources %}
+    <div><strong>{{ source.source }}</strong> · {% if source.age_hours is none %}never completed{% else %}{{ source.age_hours }}h ago{% endif %}{% if source.stale %} · stale{% endif %}</div>
+  {% endfor %}
+  </div>
+  <p class="muted">Daily schedule: {{ 'installed' if data.health.scheduler_installed else 'not installed (opt-in)' }}</p>
+</div>
+{% endif %}
+
+<div class="today-grid">
+  <section class="panel today-main">
+    <h2>Eligible triage <span class="muted">({{ data.eligible|length }})</span></h2>
+    {% for item in data.eligible %}
+    <article class="triage-card">
+      <div class="triage-score badge" style="{{ score_badge_style(item.total) }}">{{ item.total }}</div>
+      <div class="triage-body">
+        <div class="company">{{ item.company }}</div>
+        <div class="role-title">{{ item.title }}</div>
+        <div class="muted">{{ item.location }}</div>
+        {% if item.variants|length > 1 %}<div class="muted">+{{ item.variants|length - 1 }} location/source variant{{ 's' if item.variants|length > 2 else '' }}</div>{% endif %}
+        <div class="triage-actions">
+          <a class="button-link" href="/posting/{{ item.posting_id }}">Review detail</a>
+          <form hx-post="/qualify/{{ item.posting_id }}" hx-swap="none"><input type="hidden" name="tier" value="fast"><button>Fast apply</button></form>
+          <form hx-post="/qualify/{{ item.posting_id }}" hx-swap="none"><input type="hidden" name="tier" value="top20"><button>Top 20</button></form>
+          <form class="pass-form" hx-post="/pass/{{ item.posting_id }}" hx-swap="none">
+            <select name="reason">{% for reason in pass_reasons %}<option value="{{ reason }}">{{ reason|replace('_',' ') }}</option>{% endfor %}</select>
+            <input name="detail" placeholder="optional detail">
+            <button>Pass</button>
+          </form>
+        </div>
+      </div>
+    </article>
+    {% else %}<p class="empty">Eligible queue clear.</p>{% endfor %}
+  </section>
+
+  <aside>
+    <section class="panel">
+      <h2>Needs review <span class="muted">({{ data.review|length }})</span></h2>
+      {% for item in data.review %}
+      <div class="compact-item">
+        <div><strong>{{ item.company }}</strong> · {{ item.total }}</div>
+        <a href="/posting/{{ item.posting_id }}">{{ item.title }}</a>
+        <div class="muted">{{ item.location }}</div>
+        {% if item.variants|length > 1 %}<div class="muted">+{{ item.variants|length - 1 }} variant{{ 's' if item.variants|length > 2 else '' }}</div>{% endif %}
+        {% set warnings = item.warnings|from_json %}
+        <div class="flags">{% for warning in warnings %}<span class="flag review">{{ warning }}</span>{% endfor %}</div>
+      </div>
+      {% else %}<p class="empty">Nothing waiting for review.</p>{% endfor %}
+    </section>
+  </aside>
+</div>
+
+<div class="today-secondary">
+  <section class="panel"><h2>Blocked in active funnel</h2>{% for item in data.blocked_funnel %}<div class="compact-item"><a href="/posting/{{ item.posting_id }}"><strong>{{ item.company }}</strong> · {{ item.title }}</a><div class="banner-error">{{ item.stage }} · {{ item.blockers|from_json|join(', ') }}</div></div>{% else %}<p class="empty">No blocked roles remain in the active funnel.</p>{% endfor %}</section>
+  <section class="panel"><h2>Ready to submit</h2>{% for item in data.ready %}<div class="compact-item"><a href="/posting/{{ item.posting_id }}"><strong>{{ item.company }}</strong> · {{ item.title }}</a>{% if item.posting_status != 'active' %}<div class="banner-error">Source closed</div>{% endif %}</div>{% else %}<p class="empty">No applications are ready.</p>{% endfor %}</section>
+  <section class="panel"><h2>Touches due</h2>{% for item in data.touches %}<div class="compact-item"><strong>{{ item.contact_name or item.posting_company or 'Touch' }}</strong><div>{{ item.kind|replace('_',' ') }} · {{ item.due_at }}</div><form hx-post="/touch/{{ item.id }}/complete" hx-swap="none"><button>Complete</button></form></div>{% else %}<p class="empty">No touches due.</p>{% endfor %}</section>
+  <section class="panel"><h2>Interview work</h2>{% for item in data.interviews %}<div class="compact-item"><a href="/posting/{{ item.posting_id }}"><strong>{{ item.company }}</strong> · {{ item.round_name }}</a><div class="muted">{{ item.scheduled_at or item.thank_you_due_at }}</div></div>{% else %}<p class="empty">No interview work due.</p>{% endfor %}</section>
+  <section class="panel"><h2>Offer deadlines</h2>{% for item in data.offers %}<div class="compact-item"><strong>{{ item.company }}</strong><div>{{ item.deadline }}</div></div>{% else %}<p class="empty">No open offer deadlines.</p>{% endfor %}</section>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{# One board card. Expects `c` (dict from queries.board_columns) and `stage`. #}
+<div class="card">
+  <div class="company">{{ c.company or '(unknown)' }}</div>
+  <div class="title">{{ c.title or '' }}</div>
+  {% if c.posting_status != 'active' %}<div class="banner-error">Source closed</div>{% endif %}
+  <div class="meta">
+    <span class="badge" style="{{ score_badge_style(c.total) }}">{{ c.total if c.total is not none else '—' }}</span>
+    {% if c.tier %}<span class="tier">{{ c.tier }}</span>{% endif %}
+    <span class="days">{{ c.days_in_stage }}d in stage</span>
+  </div>
+  {% if c.next_action %}<div class="muted" style="margin-top:3px;">next: {{ c.next_action }}</div>{% endif %}
+  <div class="moves">
+    <a href="/posting/{{ c.posting_id }}" style="font-size:10px;">detail</a>
+    {% for target in ['tailored', 'ready', 'replied', 'interviewing', 'offer'] %}
+      {% if target != stage %}
+      <form hx-post="/move/{{ c.posting_id }}/{{ target }}" hx-swap="none">
+        <button type="submit">{{ target }}</button>
+      </form>
+      {% endif %}
+    {% endfor %}
+    {% if stage != 'passed' %}
+    <form hx-post="/pass/{{ c.posting_id }}" hx-swap="none">
+      <input type="hidden" name="reason" value="not_interested">
+      <button type="submit">passed</button>
+    </form>
+    {% endif %}
+  </div>
+</div>

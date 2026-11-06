@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Board — job-hunt{% endblock %}
+{% block content %}
+<h1>Board</h1>
+
+<div class="indicators">
+  <div class="indicator {{ 'warn' if report.applications_7d == 0 else '' }}">
+    <span class="n">{{ report.applications_7d }}</span>applications 7d (gate &ge;10)
+    {% if report.applications_7d == 0 %}<span class="warn-text"> — WARNING: 0 applications</span>{% endif %}
+  </div>
+  <div class="indicator {{ 'warn' if report.warm_touches_7d < 5 else '' }}">
+    <span class="n">{{ report.warm_touches_7d }}</span>warm touches 7d (gate &ge;5)
+  </div>
+  <div class="indicator">
+    <span class="n">{{ report.new_postings_7d }}</span>new postings 7d
+  </div>
+</div>
+
+{% if suggested %}
+<div class="panel">
+  <h2>Suggested <span class="muted">({{ suggested | length }})</span></h2>
+  <div class="board" style="flex-wrap:wrap;">
+    {% for c in suggested %}
+    <div class="card" style="flex:0 0 220px;">
+      <div class="company">{{ c.company or '(unknown)' }}</div>
+      <div class="title">{{ c.title or '' }}</div>
+      <div class="meta">
+        <span class="badge" style="{{ score_badge_style(c.total) }}">{{ c.total if c.total is not none else '—' }}</span>
+      </div>
+      {% if c.note %}<div class="muted" style="margin-top:3px;">{{ c.note }}</div>{% endif %}
+      <div class="moves">
+        <a href="/posting/{{ c.posting_id }}" style="font-size:10px;">detail</a>
+        <form hx-post="/qualify/{{ c.posting_id }}" hx-swap="none" style="display:inline-flex;gap:3px;">
+          <select name="tier">
+            <option value="top20" selected>top20</option>
+            <option value="fast">fast</option>
+            <option value="">no tier</option>
+          </select>
+          <button type="submit">Accept</button>
+        </form>
+        <form hx-post="/pass/{{ c.posting_id }}" hx-swap="none">
+          <input type="hidden" name="reason" value="not_interested">
+          <input type="hidden" name="detail" value="dismissed from suggestions">
+          <button type="submit">Dismiss</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="board">
+  {% for stage in stages %}
+  <div class="column">
+    <div class="column-header"><span>{{ stage }}</span><span>{{ columns[stage] | length }}</span></div>
+    {% if not columns[stage] %}
+      <div class="column-empty">—</div>
+    {% else %}
+      {% for c in columns[stage] %}
+        {% include "partials/card.html" %}
+      {% endfor %}
+    {% endif %}
+  </div>
+  {% endfor %}
+
+  {% set stage = 'passed' %}
+  <div class="column" style="flex-basis:180px;">
+    <div class="column-header"><span>passed</span><span>{{ columns['passed'] | length }}</span></div>
+    {% if not columns['passed'] %}<div class="column-empty">—</div>{% endif %}
+    {% for c in columns['passed'] %}{% include "partials/card.html" %}{% endfor %}
+  </div>
+  {% set stage = 'closed' %}
+  <div class="column" style="flex-basis:180px;">
+    <div class="column-header"><span>closed</span><span>{{ columns['closed'] | length }}</span></div>
+    {% if not columns['closed'] %}<div class="column-empty">—</div>{% endif %}
+    {% for c in columns['closed'] %}{% include "partials/card.html" %}{% endfor %}
+  </div>
+</div>
+{% endblock %}

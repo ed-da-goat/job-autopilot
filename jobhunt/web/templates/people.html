@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}People — job-hunt{% endblock %}
+{% block content %}
+<h1>People and warm touches</h1>
+<div class="split-grid">
+  <section class="panel">
+    <h2>Add contact</h2>
+    <form class="stack-form" hx-post="/contact" hx-swap="none">
+      <input name="name" required placeholder="name"><input name="company" placeholder="company">
+      <input name="title" placeholder="title"><input name="relationship" placeholder="relationship">
+      <input name="source" placeholder="source"><textarea name="notes" placeholder="notes"></textarea>
+      <button>Add contact</button>
+    </form>
+    <h2 class="section-gap">Contacts</h2>
+    {% for c in contacts %}<div class="compact-item"><strong>{{ c.name }}</strong> · {{ c.company }}<div class="muted">{{ c.title }} · {{ c.relationship }}</div></div>{% else %}<p class="empty">No contacts yet.</p>{% endfor %}
+  </section>
+  <section class="panel">
+    <h2>Log or plan a touch</h2>
+    <form class="stack-form" hx-post="/touch" hx-swap="none">
+      <select name="kind"><option>intro_request</option><option>outreach</option><option>follow_up</option><option>reply</option><option>thank_you</option></select>
+      <input name="contact_id" type="number" placeholder="contact id"><input name="posting_id" type="number" placeholder="posting id">
+      <input name="due_at" placeholder="due ISO date/time"><label><input type="checkbox" name="completed" value="yes"> completed now</label>
+      <textarea name="notes" placeholder="notes"></textarea><button>Save touch</button>
+    </form>
+    <h2 class="section-gap">Touches</h2>
+    {% for t in touches %}<div class="compact-item"><strong>{{ t.contact_name or t.posting_company or t.kind }}</strong><div>{{ t.kind|replace('_',' ') }} · {{ t.status }}{% if t.due_at %} · due {{ t.due_at }}{% endif %}</div>{% if t.status == 'planned' %}<form hx-post="/touch/{{ t.id }}/complete" hx-swap="none"><button>Complete</button></form>{% endif %}</div>{% else %}<p class="empty">No touches yet.</p>{% endfor %}
+  </section>
+</div>
+{% endblock %}

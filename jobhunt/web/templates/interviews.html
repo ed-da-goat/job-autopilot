@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Interviews — job-hunt{% endblock %}
+{% block content %}
+<h1>Interviews and offers</h1>
+<div class="split-grid">
+  <section class="panel"><h2>Add interview</h2><form class="stack-form" hx-post="/interview" hx-swap="none"><input type="number" name="posting_id" required placeholder="posting id"><input name="round_name" value="Interview"><input name="scheduled_at" placeholder="scheduled ISO date/time"><input name="interviewers" placeholder="interviewers"><input name="thank_you_due_at" placeholder="thank-you due"><textarea name="prep_notes" placeholder="prep notes"></textarea><button>Add interview</button></form></section>
+  <section class="panel"><h2>Add or update offer</h2><form class="stack-form" hx-post="/offer" hx-swap="none"><input type="number" name="posting_id" required placeholder="posting id"><input name="deadline" placeholder="decision deadline"><input type="number" step="0.01" name="base_salary" placeholder="base salary"><input type="number" step="0.01" name="bonus" placeholder="bonus"><input name="equity" placeholder="equity"><input name="location" placeholder="location"><textarea name="notes" placeholder="notes"></textarea><button>Save offer</button></form></section>
+</div>
+<section class="panel"><h2>Interview timeline</h2>{% for i in interviews %}<div class="compact-item"><strong>{{ i.company }} · {{ i.round_name }}</strong><div>{{ i.scheduled_at or 'unscheduled' }} · {{ i.interviewers }}</div><div class="muted">{{ i.prep_notes }}</div><form class="inline-form" hx-post="/interview/{{ i.id }}/update" hx-swap="none"><input name="outcome" value="{{ i.outcome or '' }}" placeholder="outcome"><label><input type="checkbox" name="thank_you_completed" value="yes" {{ 'checked' if i.thank_you_completed_at else '' }}> thank-you complete</label><button>Update</button></form></div>{% else %}<p class="empty">No interviews yet.</p>{% endfor %}</section>
+<section class="panel"><h2>Offers</h2>{% for o in offers %}<div class="compact-item"><strong>{{ o.company }} · {{ o.title }}</strong><div>deadline {{ o.deadline or 'not set' }} · base {{ o.base_salary or '—' }} · bonus {{ o.bonus or '—' }} · equity {{ o.equity or '—' }}</div><div class="muted">{{ o.decision or 'open' }}</div></div>{% else %}<p class="empty">No offers yet.</p>{% endfor %}</section>
+{% endblock %}

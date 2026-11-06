@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Digest — job-hunt{% endblock %}
+{% block content %}
+<h1>Digest</h1>
+
+{% if dates %}
+<div class="digest-picker">
+  {% for d in dates %}
+    <a href="/digest/{{ d }}" class="{{ 'active' if d == date else '' }}">{{ d }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if content is none %}
+  <p class="empty">No digests yet — run `python -m jobhunt digest` to generate one.</p>
+{% else %}
+<pre class="digest">{{ content }}</pre>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,15 @@
+{# One postings-browser row. Expects `r` (dict from queries.postings_browse). #}
+<tr onclick="window.location='/posting/{{ r.id }}'" style="cursor:pointer;">
+  <td><span class="badge" style="{{ score_badge_style(r.total) }}">{{ r.total if r.total is not none else '—' }}</span></td>
+  <td>{{ r.company or '(unknown)' }}</td>
+  <td>{{ r.title or '' }}</td>
+  <td class="muted">{{ r.location or '' }}</td>
+  <td class="muted">{{ r.source }}</td>
+  <td class="muted">{{ r.status }}</td>
+  <td class="muted">{{ r.stage or 'not in funnel' }}</td>
+  <td class="muted">
+    {% if r.eligibility_status != 'eligible' %}
+    <span class="badge">{{ r.eligibility_status or 'unassessed' }}</span>
+    {% endif %}
+  </td>
+</tr>

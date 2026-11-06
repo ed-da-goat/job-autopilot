@@ -1,0 +1,81 @@
+# Copy to data/search-preferences.local.toml to customize. The local file is
+# gitignored because it can contain personal job-search constraints.
+version = 1
+# Identity used in output file names (Alex_Rivera_Resume.pdf) and the HTTP User-Agent.
+candidate_name = "Alex Rivera"
+contact_email = "alex.rivera@example.com"
+# Office-location checkbox ranking (apply_assist/solve.py). "<anything> metro" means
+# the home_metro cities below, ranked only when the stored address is in home_state.
+office_city_order = ["New York", "Atlanta metro", "Chicago", "San Francisco"]
+home_metro = ["atlanta", "alpharetta", "sandy springs", "marietta", "duluth"]
+home_state = "ga"
+allowed_countries = ["US"]
+allow_us_remote = true
+max_eligible_years = 3
+review_years_max = 5
+blocked_title_terms = ["director", "vice president", "vp", "head of", "engineering manager", "senior manager", "chief"]
+review_title_terms = ["staff", "principal", "lead"]
+target_roles = ["software engineer", "forward deployed engineer", "solutions engineer", "founding engineer", "ai engineer"]
+target_start = "2026-12/2027-01"
+required_application_fields = ["full_name", "email", "phone", "work_authorization", "earliest_start"]
+sponsorship_status = "unknown"
+
+# Location tiers, best first (1 = a lane city). Matched as whole words, case-insensitive.
+
+[[city_tiers]]
+tier = 1
+cities = [
+    "new york", "nyc", "manhattan", "brooklyn", "morristown", "princeton",
+    "hoboken", "stamford", "greenwich", "purchase", "white plains", "newark",
+    "iselin", "weehawken",
+]
+
+[[city_tiers]]
+tier = 2
+cities = [
+    "atlanta", "chicago", "san francisco", "sf bay", "sf", "bay area",
+    # Suburbs. Duluth only with a GA qualifier (Duluth, MN is not a lane city).
+    "alpharetta", "sandy springs", "marietta", "duluth, ga", "duluth ga", "duluth, georgia",
+    "riverwoods", "deerfield", "evanston", "northbrook", "oak brook", "palo alto",
+    "san mateo", "oakland", "san jose",
+]
+
+[[city_tiers]]
+tier = 3
+cities = [
+    "boston", "seattle", "los angeles", "austin", "dallas", "houston",
+    "washington, d.c.", "washington dc", "washington, dc", "washington d.c.", "charlotte", "miami",
+    "denver", "philadelphia", "phoenix", "san diego", "minneapolis", "nashville",
+    "raleigh", "salt lake city", "pittsburgh", "detroit", "st. louis", "tampa",
+    "jersey city", "westlake", "plano", "irving", "frisco", "fort worth",
+    "mclean", "richmond", "arlington", "durham", "cary", "research triangle",
+    "wilmington", "baltimore", "jacksonville", "west conshohocken", "king of prussia", "south jordan",
+    "lehi",
+]
+
+# The candidate's standing application answers (apply_assist/solve.py), used only by the
+# unattended lane. FAIL CLOSED: delete or leave out any key you do not want answered for
+# you; an unset key is never guessed, the field is asked and handed to you instead. Every
+# value must be true of you and match your master resume / facts file.
+[standing_answers]
+earliest_start = 2027-01-04               # TOML date; answers "when can you start" and month checks
+travel_percent = 25                       # the most travel you accept, in percent
+working_location = "Alpharetta, GA (relocating to New York, NY)"
+sports = "Soccer and swimming in high school; no college sports."
+current_employer = "Example Co"           # long-form "current or most recent employer" boxes
+current_title = "Operations Analyst"
+school = "Example State University"       # the one school option a list may be given
+school_aliases = ["Example State"]        # other spellings of that school's list option
+education_text = "Example State University (Bachelor of Science in Business Administration, Finance concentration, expected December 2026)"
+salary = 85000                            # whole dollars; answers salary-expectation fields
+bonus = 15000                             # whole dollars; answers bonus-expectation fields
+founder_experience = true                 # true answers "have you worked at a startup?" Yes
+onsite_ok = "Yes"
+years_experience = "2 years"
+years_since_graduation = "0 years"
+camera_on = "Yes"
+notice_period = "None"
+years_ma_experience = "0 years"
+pronouns = "He/Him/His"                   # he/him-style "A/B/C" list; matched against option text
+government_employment = "No"
+military_service = "No"

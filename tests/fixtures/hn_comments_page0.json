@@ -1,0 +1,28 @@
+{
+  "hits": [
+    {
+      "objectID": "111",
+      "parent_id": 999999,
+      "created_at": "2026-07-01T17:00:00.000Z",
+      "comment_text": "Acme Corp | Backend Engineer | San Francisco, CA<p>We are hiring backend engineers to build our platform."
+    },
+    {
+      "objectID": "112",
+      "parent_id": 111,
+      "created_at": "2026-07-01T17:05:00.000Z",
+      "comment_text": "<p>Is this remote-friendly?"
+    },
+    {
+      "objectID": "113",
+      "parent_id": 999999,
+      "created_at": "2026-07-01T17:10:00.000Z",
+      "comment_text": "Widget Inc | Full Stack Developer<p>More details about the role here."
+    },
+    {
+      "objectID": "114",
+      "parent_id": 999999,
+      "created_at": "2026-07-01T17:15:00.000Z",
+      "comment_text": "Just a company name with details and no pipe separator at all<p>rest of the comment"
+    }
+  ]
+}

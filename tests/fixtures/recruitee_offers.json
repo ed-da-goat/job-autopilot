@@ -1,0 +1,36 @@
+{
+  "offers": [
+    {
+      "id": 2461420,
+      "title": "Account Executive - NY",
+      "slug": "account-executive-ny",
+      "careers_url": "https://luzmo.recruitee.com/o/account-executive-ny",
+      "careers_apply_url": "https://luzmo.recruitee.com/o/account-executive-ny/c/new",
+      "company_name": "Luzmo",
+      "city": "New York",
+      "country": "United States",
+      "location": "New York, New York, United States",
+      "department": "Sales",
+      "status": "published",
+      "published_at": "2026-06-26 12:46:11 UTC",
+      "created_at": "2026-02-04 09:38:00 UTC",
+      "updated_at": "2026-06-26 12:46:11 UTC"
+    },
+    {
+      "id": 2636987,
+      "title": "New Business Manager (UK)",
+      "slug": "new-business-manager-united-kingdom",
+      "careers_url": "https://addepto.recruitee.com/o/new-business-manager-united-kingdom",
+      "careers_apply_url": "https://addepto.recruitee.com/o/new-business-manager-united-kingdom/c/new",
+      "company_name": "Addepto",
+      "city": "",
+      "country": "",
+      "location": "Remote job",
+      "department": "Growth",
+      "status": "published",
+      "published_at": "2026-06-11 12:23:24 UTC",
+      "created_at": "2026-06-11 12:19:32 UTC",
+      "updated_at": "2026-07-20 12:57:07 UTC"
+    }
+  ]
+}

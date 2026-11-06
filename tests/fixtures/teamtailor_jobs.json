@@ -1,0 +1,70 @@
+{
+  "version": "https://jsonfeed.org/version/1.1",
+  "title": "TEAM LEWIS",
+  "home_page_url": "https://teamlewis.teamtailor.com/jobs",
+  "feed_url": "https://teamlewis.teamtailor.com/jobs.json",
+  "items": [
+    {
+      "id": "0362c43a-128f-4c10-87a8-71d7d8b03b92",
+      "title": "Marketing Executive",
+      "url": "https://teamlewis.teamtailor.com/jobs/8147893-marketing-executive",
+      "date_published": "2026-07-30T09:35:00+01:00",
+      "content_html": "<p>About us: TEAM LEWIS is a global marketing agency.</p>",
+      "_jobposting": {
+        "@context": "http://schema.org/",
+        "@type": "JobPosting",
+        "title": "Marketing Executive",
+        "description": "<p>About us: TEAM LEWIS is a global marketing agency.</p>",
+        "identifier": {
+          "@type": "PropertyValue",
+          "name": "TEAM LEWIS",
+          "value": 8147893
+        },
+        "datePosted": "2026-07-30T09:35:00+01:00",
+        "hiringOrganization": {
+          "@type": "Organization",
+          "name": "TEAM LEWIS",
+          "sameAs": "https://teamlewis.teamtailor.com"
+        },
+        "jobLocation": [
+          {
+            "@type": "Place",
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "Calle de Castelló, 23",
+              "addressLocality": "Madrid",
+              "postalCode": "28001",
+              "addressCountry": "ES",
+              "addressRegion": "Southern Europe"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "ae08634e-8d74-4b36-9450-1115339135e6",
+      "title": "HR and Payroll Administrator",
+      "url": "https://recruitgo.teamtailor.com/jobs/7874956-hr-and-payroll-administrator",
+      "date_published": "2026-06-09T11:33:35+08:00",
+      "content_html": "<p>RecruitGo is hiring.</p>",
+      "_jobposting": {
+        "@context": "http://schema.org/",
+        "@type": "JobPosting",
+        "title": "HR and Payroll Administrator",
+        "description": "<p>RecruitGo is hiring.</p>",
+        "identifier": {
+          "@type": "PropertyValue",
+          "name": "RecruitGo",
+          "value": 7874956
+        },
+        "datePosted": "2026-06-09T11:33:35+08:00",
+        "hiringOrganization": {
+          "@type": "Organization",
+          "name": "RecruitGo",
+          "sameAs": "https://recruitgo.teamtailor.com"
+        },
+        "jobLocation": []
+      }
+    }
+  ]
+}

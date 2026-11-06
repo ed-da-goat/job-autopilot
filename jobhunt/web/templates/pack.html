@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Apply pack — [{{ posting.id }}] {{ posting.company }} — job-hunt{% endblock %}
+{% block content %}
+<h1>Apply Pack — {{ posting.company or '(unknown)' }} — {{ posting.title or '' }}</h1>
+<p class="muted">
+  <a href="/posting/{{ posting.id }}">&larr; back to posting</a>
+</p>
+
+{% if fill_lines %}
+<div class="panel">
+  <p class="banner-error"><strong>Still unfilled ({{ fill_lines | length }}):</strong></p>
+  <ul>
+    {% for line in fill_lines %}<li class="banner-error">{{ line }}</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+{% for section in sections %}
+<div class="panel">
+  <h2>{{ section.title }}</h2>
+  <pre id="pack-section-{{ section.key }}" class="digest">{{ section.content }}</pre>
+  <div class="draft-actions">
+    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('pack-section-{{ section.key }}').innerText)">Copy</button>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,156 @@
+[
+  {
+    "field": {
+      "selector": "#question_12198097007",
+      "kind": "text",
+      "label": "Full Legal Name*",
+      "name": "",
+      "elem_id": "question_12198097007",
+      "autocomplete": "",
+      "placeholder": "",
+      "required": false,
+      "options": []
+    },
+    "expected_key": "full_name"
+  },
+  {
+    "field": {
+      "selector": "#country",
+      "kind": "text",
+      "label": "Country*",
+      "name": "",
+      "elem_id": "country",
+      "autocomplete": "off",
+      "placeholder": "",
+      "required": false,
+      "options": []
+    },
+    "expected_key": "country"
+  },
+  {
+    "field": {
+      "selector": "#question_12022836007",
+      "kind": "text",
+      "label": "X Profile",
+      "name": "",
+      "elem_id": "question_12022836007",
+      "autocomplete": "",
+      "placeholder": "",
+      "required": false,
+      "options": []
+    },
+    "expected_key": null
+  },
+  {
+    "field": {
+      "selector": "#question_12022839007",
+      "kind": "text",
+      "label": "Google Scholar",
+      "name": "",
+      "elem_id": "question_12022839007",
+      "autocomplete": "",
+      "placeholder": "",
+      "required": false,
+      "options": []
+    },
+    "expected_key": null
+  },
+  {
+    "field": {
+      "selector": "#_systemfield_name",
+      "kind": "text",
+      "label": "Name",
+      "name": "_systemfield_name",
+      "elem_id": "_systemfield_name",
+      "autocomplete": "",
+      "placeholder": "Type here...",
+      "required": true,
+      "options": []
+    },
+    "expected_key": "full_name"
+  },
+  {
+    "field": {
+      "selector": "#question_12198104007",
+      "kind": "text",
+      "label": "Please indicate your SpaceXAI employment history.*",
+      "name": "",
+      "elem_id": "question_12198104007",
+      "autocomplete": "off",
+      "placeholder": "",
+      "required": false,
+      "options": []
+    },
+    "expected_key": null
+  },
+  {
+    "field": {
+      "selector": "#question_12198107007",
+      "kind": "textarea",
+      "label": "What exceptional work have you done?*",
+      "name": "",
+      "elem_id": "question_12198107007",
+      "autocomplete": "",
+      "placeholder": "",
+      "required": false,
+      "options": []
+    },
+    "expected_key": null
+  },
+  {
+    "field": {
+      "selector": "#question_35776778002",
+      "kind": "text",
+      "label": "Job Applicant Data Privacy Notice*",
+      "name": "",
+      "elem_id": "question_35776778002",
+      "autocomplete": "off",
+      "placeholder": "",
+      "required": false,
+      "options": []
+    },
+    "expected_key": null
+  },
+  {
+    "field": {
+      "selector": "#question_35776777002",
+      "kind": "text",
+      "label": "Are you currently employed by a client, partner, or competitor of Addepar?*",
+      "name": "",
+      "elem_id": "question_35776777002",
+      "autocomplete": "off",
+      "placeholder": "",
+      "required": false,
+      "options": []
+    },
+    "expected_key": null
+  },
+  {
+    "field": {
+      "selector": "[name=\"cards[a69a985a-eae9-4c14-90fb-b5a4b891523e][field1]\"]",
+      "kind": "text",
+      "label": "",
+      "name": "cards[a69a985a-eae9-4c14-90fb-b5a4b891523e][field1]",
+      "elem_id": "",
+      "autocomplete": "",
+      "placeholder": "Type your response",
+      "required": false,
+      "options": []
+    },
+    "expected_key": null
+  },
+  {
+    "field": {
+      "selector": "#question_8664389005",
+      "kind": "text",
+      "label": "Are you open to working in person in our London office 2-3 times a week?",
+      "name": "",
+      "elem_id": "question_8664389005",
+      "autocomplete": "off",
+      "placeholder": "",
+      "required": false,
+      "options": []
+    },
+    "expected_key": null
+  }
+]

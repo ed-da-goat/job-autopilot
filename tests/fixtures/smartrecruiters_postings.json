@@ -1,0 +1,43 @@
+{
+  "offset": 0,
+  "limit": 100,
+  "totalFound": 2,
+  "content": [
+    {
+      "id": "744000133907678",
+      "name": "Sr. Manager",
+      "uuid": "267d47c7-29af-4c8f-a19d-c112895329df",
+      "company": {
+        "identifier": "Visa",
+        "name": "Visa"
+      },
+      "releasedDate": "2026-06-24T10:00:11.853Z",
+      "location": {
+        "city": "Austin",
+        "region": "TX",
+        "country": "us",
+        "remote": false,
+        "hybrid": false,
+        "fullLocation": "Austin, TX, United States"
+      }
+    },
+    {
+      "id": "744000137613800",
+      "name": "Senior Information Security Engineer",
+      "uuid": "846c9735-28eb-464c-b3aa-4c0407979e0f",
+      "company": {
+        "identifier": "Visa",
+        "name": "Visa"
+      },
+      "releasedDate": "2026-07-14T08:29:20.852Z",
+      "location": {
+        "city": "Poland",
+        "region": "REMOTE",
+        "country": "pl",
+        "remote": true,
+        "hybrid": false,
+        "fullLocation": "Poland, REMOTE, Poland"
+      }
+    }
+  ]
+}

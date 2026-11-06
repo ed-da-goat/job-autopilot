@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Report — job-hunt{% endblock %}
+{% block content %}
+<h1>Report</h1>
+
+<div class="panel">
+  <h2>Stage counts</h2>
+  <table>
+    <thead><tr><th>Stage</th><th>Count</th></tr></thead>
+    <tbody>
+      {% for stage, count in data.stage_counts.items() %}
+      <tr><td>{{ stage }}</td><td>{{ count }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="panel">
+  <h2>Conversion: qualified &rarr; applied &rarr; replied &rarr; interviewing &rarr; offer</h2>
+  <div class="bars">
+    {% set prev = none %}
+    {% for stage in conversion_stages %}
+      {% set count = data.conversion_counts.get(stage, 0) %}
+      <div class="bar-row">
+        <span class="muted">{{ stage }}</span>
+        <div class="bar-track"><div class="bar-fill" style="{{ score_bar_style(count, data.conversion_counts.get('qualified', 1) or 1) }}"></div></div>
+        <span>{{ count }}{% if prev %} ({{ (count / prev * 100) | round | int }}%){% endif %}</span>
+      </div>
+      {% set prev = count %}
+    {% endfor %}
+  </div>
+</div>
+
+<div class="indicators">
+  <div class="indicator {{ 'warn' if data.applications_7d == 0 else '' }}">
+    <span class="n">{{ data.applications_7d }}</span>applications 7d
+    {% if data.applications_7d == 0 %}<span class="warn-text"> — WARNING: 0 applications in the last 7 days</span>{% endif %}
+  </div>
+  <div class="indicator"><span class="n">{{ data.warm_touches_7d }}</span>warm touches 7d</div>
+  <div class="indicator"><span class="n">{{ data.new_postings_7d }}</span>new postings 7d</div>
+</div>
+
+<div class="panel">
+  <h2>Top 15 unworked{% if data.rubric_version %} (rubric v{{ data.rubric_version }}){% endif %}</h2>
+  {% if data.rubric_version is none %}
+    <p class="muted">No scores yet — run `score` or `resweep` first.</p>
+  {% elif not data.top15 %}
+    <p class="muted">None — every scored posting is already in the funnel.</p>
+  {% else %}
+    <table>
+      <thead><tr><th>Score</th><th>Company</th><th>Title</th><th></th></tr></thead>
+      <tbody>
+        {% for row in data.top15 %}
+        <tr>
+          <td><span class="badge" style="{{ score_badge_style(row.total) }}">{{ row.total }}</span></td>
+          <td>{{ row.company }}</td>
+          <td>{{ row.title }}</td>
+          <td>
+            <form hx-post="/qualify/{{ row.posting_id }}" hx-swap="none">
+              <button type="submit">Qualify</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>Next actions due</h2>
+  {% if not data.next_actions %}
+    <p class="muted">None due.</p>
+  {% else %}
+    <ul class="timeline">
+      {% for row in data.next_actions %}
+      <li><a href="/posting/{{ row.posting_id }}">[{{ row.posting_id }}]</a> {{ row.next_action_date }} ({{ row.stage }}) {{ row.next_action }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>
+{% endblock %}

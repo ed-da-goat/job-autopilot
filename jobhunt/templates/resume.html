@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ contact.name }} Resume</title>
+<style>
+  /* Letter, 0.5in margins, single page. Print CSS only: this template is
+     rendered head-less through Playwright's page.pdf(), never served. */
+  @page {
+    size: Letter;
+    margin: 0.5in;
+  }
+
+  :root {
+    --ink: #111111;
+    --muted: #444444;
+    --rule: #999999;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: "Times New Roman", Times, Georgia, serif;
+    font-size: 10.8pt;
+    line-height: 1.3;
+    color: var(--ink);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 8pt;
+  }
+
+  h1 {
+    font-size: 19pt;
+    letter-spacing: 1.6pt;
+    font-weight: 700;
+    margin: 0 0 3pt;
+    text-transform: uppercase;
+  }
+
+  .contact-line {
+    font-size: 9.2pt;
+    color: var(--muted);
+  }
+
+  .contact-line span + span::before {
+    content: " • ";
+    color: var(--rule);
+  }
+
+  .summary {
+    margin: 0 0 9pt;
+    text-align: justify;
+    font-size: 10pt;
+  }
+
+  h2 {
+    font-size: 10.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.9pt;
+    margin: 9pt 0 3pt;
+    padding-bottom: 1.5pt;
+    border-bottom: 0.8pt solid var(--ink);
+  }
+
+  .entry {
+    margin-bottom: 6pt;
+    page-break-inside: avoid;
+  }
+
+  .entry:last-child { margin-bottom: 0; }
+
+  .entry-head,
+  .entry-sub {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12pt;
+  }
+
+  .org {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4pt;
+  }
+
+  .role {
+    font-style: italic;
+  }
+
+  .where,
+  .when {
+    white-space: nowrap;
+    color: var(--muted);
+    font-size: 9.4pt;
+  }
+
+  ul {
+    margin: 2.5pt 0 0;
+    padding-left: 14pt;
+  }
+
+  li {
+    margin-bottom: 1.6pt;
+    text-align: justify;
+  }
+
+  li:last-child { margin-bottom: 0; }
+
+  .skill-row {
+    margin-bottom: 2.4pt;
+    text-align: justify;
+  }
+
+  .skill-row:last-child { margin-bottom: 0; }
+
+  .skill-label {
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>{{ contact.name }}</h1>
+  <div class="contact-line">
+    {%- if contact.phone %}<span>{{ contact.phone }}</span>{% endif %}
+    {%- if contact.location %}<span>{{ contact.location }}</span>{% endif %}
+    {%- if contact.email %}<span>{{ contact.email }}</span>{% endif %}
+    {%- if contact.linkedin %}<span>{{ contact.linkedin }}</span>{% endif %}
+    {%- if contact.github %}<span>{{ contact.github }}</span>{% endif %}
+  </div>
+  {%- if contact.headline %}
+  <div class="contact-line">
+    <span>{{ contact.headline }}</span>
+  </div>
+  {%- endif %}
+</header>
+
+{% if summary %}<p class="summary">{{ summary }}</p>{% endif %}
+
+{% if experience %}
+<h2>Experience</h2>
+{% for job in experience %}
+<div class="entry">
+  <div class="entry-head">
+    <span class="org">{{ job.company }}</span>
+    <span class="where">{{ job.location }}</span>
+  </div>
+  <div class="entry-sub">
+    <span class="role">{{ job.title }}</span>
+    <span class="when">{{ job.dates }}</span>
+  </div>
+  {% if job.bullets %}
+  <ul>
+    {% for bullet in job.bullets %}<li>{{ bullet.text }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endfor %}
+{% endif %}
+
+{% if education %}
+<h2>Education</h2>
+{% for school in education %}
+<div class="entry">
+  <div class="entry-head">
+    <span class="org">{{ school.school }}</span>
+    {# No degree line (study abroad) means the sub-row would be blank on the left,
+       leaving the date stranded. Fold it into the header instead. #}
+    <span class="where">{{ school.location }}{% if school.dates and not school.degree %} &bull; {{ school.dates }}{% endif %}</span>
+  </div>
+  {% if school.degree %}
+  <div class="entry-sub">
+    <span class="role">{{ school.degree }}</span>
+    <span class="when">{{ school.dates }}</span>
+  </div>
+  {% endif %}
+</div>
+{% endfor %}
+{% endif %}
+
+{% if skills %}
+<h2>Skills &amp; Interests</h2>
+{% for row in skills %}
+<div class="skill-row"><span class="skill-label">{{ row.label }}:</span> {{ row.text }}</div>
+{% endfor %}
+{% endif %}
+
+{% if projects %}
+<h2>Projects</h2>
+{% for project in projects %}
+<div class="entry">
+  <div class="entry-head">
+    <span class="org">{{ project.name }}</span>
+    <span class="when">{{ project.dates }}</span>
+  </div>
+  {% if project.bullets %}
+  <ul>
+    {% for bullet in project.bullets %}<li>{{ bullet.text }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endfor %}
+{% endif %}
+
+</body>
+</html>

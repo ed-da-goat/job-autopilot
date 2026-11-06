@@ -1,0 +1,10 @@
+# Copy to data/sheets.local.toml to enable `sheets-sync` (gitignored — the
+# service account path and spreadsheet ID are treated as local secrets).
+# Setup: (1) create a GCP service account + JSON key, (2) enable the Google
+# Sheets API on that project, (3) share your target spreadsheet with the
+# service account's email (Editor access), (4) paste its ID below (the long
+# token in the spreadsheet URL between /d/ and /edit).
+spreadsheet_id = "REPLACE_WITH_SPREADSHEET_ID"
+service_account_json = "data/sheets-service-account.json"
+shortlist_min_score = 55
+shortlist_limit = 200

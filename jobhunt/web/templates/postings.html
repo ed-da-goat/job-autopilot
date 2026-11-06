@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Postings — job-hunt{% endblock %}
+{% block content %}
+<h1>Postings <span class="muted">({{ total }} match{{ 'es' if total != 1 else '' }})</span></h1>
+
+<form class="filters" method="get" action="/postings">
+  <input type="number" name="min_score" placeholder="min score" value="{{ min_score if min_score is not none else '' }}">
+  <input type="number" name="max_score" placeholder="max score" value="{{ max_score if max_score is not none else '' }}">
+  <select name="source">
+    <option value="">any source</option>
+    {% for s in ['greenhouse', 'ashby', 'lever', 'hn', 'simplify'] %}
+    <option value="{{ s }}" {{ 'selected' if source == s else '' }}>{{ s }}</option>
+    {% endfor %}
+  </select>
+  <select name="status">
+    <option value="">any status</option>
+    <option value="active" {{ 'selected' if status == 'active' else '' }}>active</option>
+    <option value="closed" {{ 'selected' if status == 'closed' else '' }}>closed</option>
+  </select>
+  <select name="in_funnel">
+    <option value="">in-funnel: any</option>
+    <option value="y" {{ 'selected' if in_funnel == 'y' else '' }}>in funnel</option>
+    <option value="n" {{ 'selected' if in_funnel == 'n' else '' }}>not in funnel</option>
+  </select>
+  <select name="eligible">
+    <option value="">eligibility: any</option>
+    <option value="y" {{ 'selected' if eligible == 'y' else '' }}>eligible only</option>
+  </select>
+  <input type="text" name="q" placeholder="search company/title" value="{{ q }}">
+  <button type="submit">Filter</button>
+</form>
+
+<table>
+  <thead>
+    <tr><th>Score</th><th>Company</th><th>Title</th><th>Location</th><th>Source</th><th>Status</th><th>Funnel</th><th>Eligibility</th></tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+      {% include "partials/row.html" %}
+    {% else %}
+      <tr><td colspan="8" class="empty">No postings match these filters.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="pager">
+  <span>page {{ page }} / {{ total_pages }}</span>
+  {% if page > 1 %}
+  <a href="/postings?page={{ page - 1 }}&min_score={{ min_score if min_score is not none else '' }}&max_score={{ max_score if max_score is not none else '' }}&source={{ source | urlencode }}&status={{ status | urlencode }}&in_funnel={{ in_funnel | urlencode }}&eligible={{ eligible | urlencode }}&q={{ q | urlencode }}">&laquo; prev</a>
+  {% endif %}
+  {% if page < total_pages %}
+  <a href="/postings?page={{ page + 1 }}&min_score={{ min_score if min_score is not none else '' }}&max_score={{ max_score if max_score is not none else '' }}&source={{ source | urlencode }}&status={{ status | urlencode }}&in_funnel={{ in_funnel | urlencode }}&eligible={{ eligible | urlencode }}&q={{ q | urlencode }}">next &raquo;</a>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}[{{ posting.id }}] {{ posting.company }} — job-hunt{% endblock %}
+{% block content %}
+<h1>{{ posting.company or '(unknown)' }} — {{ posting.title or '' }}</h1>
+<p class="muted">
+  {{ posting.location or 'location n/a' }} &middot; {{ posting.source }} &middot; {{ posting.status }} &middot;
+  <a href="{{ posting.url }}" target="_blank" rel="noopener">job posting &rarr;</a> &middot;
+  <a href="/pack/{{ posting.id }}">Apply pack &rarr;</a>
+</p>
+
+<div class="panel">
+  <h2>Eligibility and requirements</h2>
+  {% if eligibility %}
+    <p><span class="status-pill {{ eligibility.status }}">{{ eligibility.status }}</span> · {{ posting_age_days if posting_age_days is not none else '—' }} days old</p>
+    {% set blockers = eligibility.blockers|from_json %}
+    {% set warnings = eligibility.warnings|from_json %}
+    {% set evidence = eligibility.evidence|from_json %}
+    <div class="flags">{% for item in blockers %}<span class="flag blocker">{{ item }}</span>{% endfor %}{% for item in warnings %}<span class="flag review">{{ item }}</span>{% endfor %}</div>
+    {% if evidence %}<ul class="evidence-list">{% for item in evidence %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+  {% else %}<p class="warn-text">Not assessed. Run score before triage.</p>{% endif %}
+  <details open><summary>Job description and requirements</summary><p class="description-text">{{ description or 'No description text available.' }}</p></details>
+  {% if duplicate_group|length > 1 %}<details><summary>{{ duplicate_group|length }} matching location/source variants</summary><ul>{% for item in duplicate_group %}<li><a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.location or 'location n/a' }} · {{ item.source }}</a></li>{% endfor %}</ul></details>{% endif %}
+</div>
+
+<div class="panel">
+  <h2>Score{% if rubric_version %} (rubric v{{ rubric_version }}){% endif %}</h2>
+  {% if score is none %}
+    <p class="muted">Not scored yet.</p>
+  {% else %}
+    <p><span class="badge" style="{{ score_badge_style(score.total) }}">{{ score.total }}</span>
+       {% if score.excluded %}<span class="warn-text"> excluded: {{ score.exclude_reason }}</span>{% endif %}</p>
+    <div class="bars">
+      {% set components = score.components | from_json %}
+      {% for key, max_val in components_max.items() %}
+      <div class="bar-row">
+        <span class="muted">{{ key }}</span>
+        <div class="bar-track"><div class="bar-fill" style="{{ score_bar_style(components.get(key, 0), max_val) }}"></div></div>
+        <span>{{ components.get(key, 0) }}/{{ max_val }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% set missing = score.missing_evidence | from_json %}
+    {% if missing %}
+    <div class="flags">
+      {% for m in missing %}<span class="flag">{{ m }}</span>{% endfor %}
+    </div>
+    {% endif %}
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>Funnel</h2>
+  {% if funnel is none %}
+    <p class="muted">Not entered — harvested only, no funnel row yet.</p>
+    <form hx-post="/qualify/{{ posting.id }}" hx-swap="none">
+      <button type="submit">Qualify</button>
+    </form>
+  {% else %}
+    <p>stage: <strong>{{ funnel.stage }}</strong>{% if funnel.applied_at %} &middot; applied {{ funnel.applied_at[:10] }}{% endif %}</p>
+
+    <div class="stage-actions">
+      {% for target in stages %}
+        {% if target != funnel.stage and target not in ['harvested', 'passed', 'applied'] %}
+        <form hx-post="/move/{{ posting.id }}/{{ target }}" hx-swap="none">
+          <button type="submit">&rarr; {{ target }}</button>
+        </form>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    {% if funnel.stage != 'passed' %}
+    <form class="editform" hx-post="/pass/{{ posting.id }}" hx-swap="none" style="margin-top:8px;">
+      <label>structured pass</label>
+      <select name="reason">{% for reason in pass_reasons %}<option value="{{ reason }}">{{ reason|replace('_',' ') }}</option>{% endfor %}</select>
+      <input type="text" name="detail" placeholder="optional detail">
+      <button type="submit">Pass</button>
+    </form>
+    {% endif %}
+
+    <h2 style="margin-top:14px;">Edit fields</h2>
+    {% for field, label in [('tier', 'tier (top20/fast/stretch)'), ('referral_path', 'referral path'), ('next_action', 'next action'), ('next_action_date', 'next action date'), ('notes', 'notes')] %}
+    <form class="editform" hx-post="/set/{{ posting.id }}/{{ field }}" hx-swap="none">
+      <label>{{ label }}</label>
+      <input type="text" name="value" value="{{ funnel[field] or '' }}">
+      <button type="submit">Save</button>
+    </form>
+    {% endfor %}
+
+    <h2 style="margin-top:14px;">Event history</h2>
+    {% if not events %}
+      <p class="muted">No events yet.</p>
+    {% else %}
+      <ul class="timeline">
+        {% for e in events %}
+        <li><span class="at">{{ e.at[:19] }}</span>{{ e.from_stage or '(none)' }} &rarr; {{ e.to_stage }}{% if e.note %} — {{ e.note }}{% endif %}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>Application workspace</h2>
+  {% if readiness.ready %}<p class="ready-text">Ready gate passed.</p>{% else %}<p class="warn-text">Not ready</p><div class="flags">{% for blocker in readiness.blockers %}<span class="flag blocker">{{ blocker }}</span>{% endfor %}</div>{% endif %}
+  <form class="editform" hx-post="/application/{{ posting.id }}" hx-swap="none">
+    <label>resume variant</label>
+    <select name="resume_variant_id"><option value="">select reviewed resume</option>{% for resume in resumes %}<option value="{{ resume.id }}" {{ 'selected' if application and application.resume_variant_id == resume.id else '' }}>{{ resume.label }}{{ '' if resume.reviewed_at else ' · unreviewed' }}</option>{% endfor %}</select>
+    <input name="channel" value="{{ application.channel if application else 'company careers page' }}" placeholder="application channel">
+    <button>Save</button>
+  </form>
+  <form class="stack-form nested-form" hx-post="/resume-variant" hx-swap="none">
+    <strong>Add or review a resume variant</strong>
+    <input name="label" required placeholder="label"><input name="path" required placeholder="local resume path"><input name="purpose" placeholder="purpose">
+    <label><input type="checkbox" name="reviewed" value="yes"> I personally reviewed this resume</label><button>Save resume</button>
+  </form>
+  <div class="triage-actions">
+    <form hx-post="/application/{{ posting.id }}/ready" hx-target="#application-gate" hx-swap="innerHTML"><button>Mark ready</button></form>
+    <form hx-post="/application/{{ posting.id }}/applied" hx-target="#application-gate" hx-swap="innerHTML">
+      <label><input type="checkbox" name="confirmed" value="yes"> I submitted this application manually</label>
+      <input name="confirmation_ref" placeholder="confirmation reference"><button>Mark applied</button>
+    </form>
+  </div>
+  <div id="application-gate"></div>
+</div>
+
+<div class="panel">
+  <h2>Drafts</h2>
+  <form hx-post="/prep/{{ posting.id }}" hx-target="#prep-packet-banner" hx-swap="innerHTML" style="margin-bottom:10px;">
+    <button type="submit">Prep full packet</button>
+  </form>
+  <div id="prep-packet-banner"></div>
+
+  {% for kind in ['tailoring', 'cover', 'outreach'] %}
+  <div class="draft-block">
+    <h3>{{ kind | capitalize }}</h3>
+    {% set draft = drafts[kind] %}
+    {% if draft %}
+      <p class="muted">
+        {{ draft.model }} &middot; ${{ '%.4f' | format(draft.cost_usd or 0) }}
+        {% if draft.edited %} &middot; edited{% endif %}
+      </p>
+      <form class="draft-form" hx-post="/draft/{{ draft.id }}/save" hx-swap="none">
+        <textarea id="draft-content-{{ draft.id }}" name="content" rows="8">{{ draft.content }}</textarea>
+        <div class="draft-actions">
+          <button type="submit">Save</button>
+          <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('draft-content-{{ draft.id }}').value)">Copy</button>
+        </div>
+      </form>
+      <form hx-post="/draft/{{ draft.id }}/regenerate" hx-target="#prep-banner-{{ kind }}" hx-swap="innerHTML">
+        <button type="submit">Regenerate</button>
+      </form>
+      <div id="prep-banner-{{ kind }}"></div>
+    {% else %}
+      <p class="muted">No draft yet.</p>
+      <form hx-post="/prep/{{ posting.id }}/{{ kind }}" hx-target="#prep-banner-{{ kind }}" hx-swap="innerHTML">
+        <button type="submit">Prep</button>
+      </form>
+      <div id="prep-banner-{{ kind }}"></div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<div class="panel">
+  <h2>Copy-ready lifecycle artifacts</h2>
+  <div class="triage-actions">{% for kind in ['follow_up','interview_prep','thank_you','offer_questions'] %}<form hx-post="/artifact/{{ posting.id }}" hx-swap="none"><input type="hidden" name="kind" value="{{ kind }}"><button>{{ kind|replace('_',' ') }}</button></form>{% endfor %}</div>
+  {% for artifact in artifacts %}<div class="draft-block"><h3>{{ artifact.kind|replace('_',' ') }}</h3><textarea id="artifact-{{ artifact.id }}" rows="8">{{ artifact.content }}</textarea><button type="button" onclick="navigator.clipboard.writeText(document.getElementById('artifact-{{ artifact.id }}').value)">Copy</button></div>{% else %}<p class="empty">No lifecycle artifacts yet.</p>{% endfor %}
+</div>
+{% endblock %}

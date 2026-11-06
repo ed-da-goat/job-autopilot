@@ -1,0 +1,18 @@
+{
+  "jobs": [
+    {
+      "id": "ashby-1",
+      "title": "Applied AI Engineer",
+      "jobUrl": "https://jobs.ashbyhq.com/acme/ashby-1",
+      "location": "San Francisco, CA",
+      "publishedAt": "2026-07-11T00:00:00.000Z"
+    },
+    {
+      "id": "ashby-2",
+      "title": "Founding Engineer",
+      "applyUrl": "https://jobs.ashbyhq.com/acme/ashby-2/apply",
+      "locationName": "Remote",
+      "publishedDate": "2026-07-13"
+    }
+  ]
+}
