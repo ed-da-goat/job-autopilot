@@ -14,11 +14,14 @@ from jobhunt import db as db_module
 from jobhunt import finai
 from jobhunt.apply_assist import posting_answers as pa
 from jobhunt.apply_assist.keys import SEMANTIC_KEYS
+from tests.conftest import operator_file
 
 # Captured at import, before any test patches it.
 REAL_MASTER_PATH = pa.MASTER_PATH
 REAL_FACTS_PATH = pa.FACTS_PATH
 REAL_ANSWERS_PATH = pa.ANSWERS_PATH
+OPERATOR_MASTER_PATH = operator_file("data/apply_packs/finai/master.rm.json")
+OPERATOR_ANSWERS_PATH = operator_file("data/answers.local.md")
 
 MASTER = {
     "personalInfo": {"name": "Pat Example"},
@@ -120,16 +123,20 @@ def salary(conn, posting_id):
     return answers["salary_expectation"], answers["salary_midpoint"]
 
 
-def test_facts_path_is_the_one_autotailor_reads():
+def test_facts_path_is_the_one_autotailor_reads(monkeypatch):
     from jobhunt import autotailor
+
+    monkeypatch.undo()  # the autouse fixture points both at nothing; compare the real paths
 
     assert REAL_FACTS_PATH == autotailor.FACTS_PATH
     assert REAL_ANSWERS_PATH.name == "answers.local.md"
     assert REAL_ANSWERS_PATH.parent == REAL_FACTS_PATH.parent
 
 
-def test_master_path_is_the_one_autotailor_reads():
+def test_master_path_is_the_one_autotailor_reads(monkeypatch):
     from jobhunt import autotailor
+
+    monkeypatch.undo()
 
     assert REAL_MASTER_PATH == autotailor.MASTER_PATH
 
@@ -750,17 +757,18 @@ def test_an_unknown_posting_still_gives_no_answers_even_with_an_answers_file(con
 
 
 def test_the_real_answers_file_holds_readable_education_start_and_over_18(monkeypatch):
-    if not REAL_ANSWERS_PATH.exists():
-        pytest.skip("data/answers.local.md is not on this machine")
-    monkeypatch.setattr(pa, "ANSWERS_PATH", REAL_ANSWERS_PATH)
+    if not OPERATOR_ANSWERS_PATH.exists():
+        pytest.skip("operator check: set JOBHUNT_CHECK_LOCAL_FILES=1 with data/answers.local.md in place")
+    monkeypatch.setattr(pa, "ANSWERS_PATH", OPERATOR_ANSWERS_PATH)
     found = pa._answers_file()
     assert re.fullmatch(r"[A-Z][a-z]+ 20\d\d", found.get("education_start", ""))
     assert found.get("over_18") in ("Yes", "No")
 
 
-def test_the_real_resume_lists_sql_and_names_no_proprietary_trading():
-    if not REAL_MASTER_PATH.exists():
-        pytest.skip("the master resume is not on this machine")
+def test_the_real_resume_lists_sql_and_names_no_proprietary_trading(monkeypatch):
+    if not OPERATOR_MASTER_PATH.exists():
+        pytest.skip("operator check: set JOBHUNT_CHECK_LOCAL_FILES=1 with the master resume in place")
+    monkeypatch.setattr(pa, "MASTER_PATH", OPERATOR_MASTER_PATH)
     skills = pa._resume_skills()
     assert skills is not None and "sql" in skills.split(",")
     assert pa._resume_prop_trading() == "No"

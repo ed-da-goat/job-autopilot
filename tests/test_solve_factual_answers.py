@@ -21,6 +21,7 @@ from jobhunt.apply_assist import solve
 from jobhunt.apply_assist.keys import CHECKBOX_TITLE_SEP
 from jobhunt.apply_assist.schema import FieldSpec
 from jobhunt.eligibility import user_preferences
+from tests.conftest import operator_file
 
 RESUME = "/tmp/resume.pdf"
 
@@ -846,7 +847,7 @@ def test_military_service_is_no():
 
 # --- The facts file still says what the rules say ------------------------------------
 
-FACTS = Path(__file__).resolve().parents[1] / "data" / "facts.local.md"
+FACTS = operator_file("data/facts.local.md")
 SECTION = "## Standing application answers"
 _BULLET = re.compile(r"^\s*[-*]\s+(?P<label>[^:]+?)\s*:\s*(?P<value>.*?)\s*$")
 
@@ -1133,13 +1134,16 @@ def test_the_new_york_onsite_commitment_is_asked_in_the_assist_lane():
 
 # --- The resume names the skills the rule answers Yes for ------------------------------
 
-MASTER = Path(__file__).resolve().parents[1] / "data" / "apply_packs" / "finai" / "master.rm.json"
+MASTER = operator_file("data/apply_packs/finai/master.rm.json")
 
 
-def test_every_skill_answered_yes_from_a_real_resume_is_named_on_it():
+def test_every_skill_answered_yes_from_a_real_resume_is_named_on_it(monkeypatch):
     if not MASTER.exists():
-        pytest.skip("the master resume is not on this machine")
+        pytest.skip("operator check: set JOBHUNT_CHECK_LOCAL_FILES=1 with the master resume in place")
     from jobhunt.apply_assist import posting_answers
+
+    monkeypatch.setattr(posting_answers, "MASTER_PATH", MASTER)
+    monkeypatch.setattr(posting_answers, "FACTS_PATH", FACTS)
 
     skills = posting_answers._resume_skills()
     assert skills is not None

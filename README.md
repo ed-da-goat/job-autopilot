@@ -56,6 +56,7 @@ Prerequisites:
 
 - [uv](https://docs.astral.sh/uv/) (Python 3.12+ is installed for you)
 - Node and npm: `make demo` builds the web UI on first run
+- For real applications only: Google Chrome (the apply browser) and LibreOffice (`brew install --cask libreoffice`; it turns the tailored resume into a PDF). `jobhunt doctor` checks both.
 - macOS, only if you want launchd scheduling; the rest is plain Python
 
 ## Make it yours

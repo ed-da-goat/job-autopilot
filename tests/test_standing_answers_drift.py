@@ -18,10 +18,11 @@ import pytest
 
 from jobhunt.apply_assist import solve
 from jobhunt.eligibility import user_preferences
+from tests.conftest import operator_file
 
 SA = user_preferences().standing_answers
 
-FACTS = Path(__file__).resolve().parents[1] / "data" / "facts.local.md"
+FACTS = operator_file("data/facts.local.md")
 SECTION_HEADING = "## Standing application answers"
 NO_FACTS = (
     "data/facts.local.md is not on this machine (the public repo has none): there is "
