@@ -18,6 +18,9 @@ data/facts.local.md
 notes/private/
 *.pdf
 *.docx
+# ...except the committed example persona template (regenerate: scripts/make_example_resume.py)
+!examples/resume.example.docx
+data/resume.local.docx
 
 # Python
 .venv/

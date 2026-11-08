@@ -386,6 +386,12 @@ def write_drafts_log(
 # ---- the drafter ----
 
 
+def _template_hint() -> str:
+    from jobhunt import autotailor  # lazy, as in _defaults
+
+    return autotailor.TEMPLATE_HINT
+
+
 def _defaults() -> tuple[Path, Path]:
     """(resume template, tailored-output root), read at call time."""
     from jobhunt import autotailor  # lazy: autotailor pulls in the whole tailoring stack
@@ -439,7 +445,7 @@ def draft_cover_letter(
     template = Path(template) if template else default_template
     if not template.exists():
         return CoverLetterResult(
-            posting_id, "error", detail=f"resume template not found: {template} (set JOBHUNT_RESUME_TEMPLATE)"
+            posting_id, "error", detail=f"{_template_hint()} (looked for {template})"
         )
     out_dir = Path(out_root or default_root) / str(posting_id)
     fp = ta.fingerprint(CACHE_KEY_TEXT)

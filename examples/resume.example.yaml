@@ -1,0 +1,53 @@
+# Structured resume source for `jobhunt resume ...` (render and the bullet-id tailoring).
+# Copy to resume/resume.yaml (gitignored) and replace every value with your own.
+# Every bullet needs a stable id; variants only reorder or drop existing bullets, they never
+# add facts. This is the Alex Rivera example persona.
+contact:
+  name: Alex Rivera
+  email: alex.rivera@example.com
+  phone: 555-0100
+  linkedin: linkedin.com/in/alex-rivera-example
+  github: github.com/alex-rivera-example
+education:
+  - school: Example State University, College of Business
+    location: Springfield, ST
+    degree: Bachelor of Science in Business Administration, Finance concentration
+    dates: Dec 2026
+experience:
+  - id: exco
+    company: Example Co
+    title: Operations Analyst
+    location: Springfield, ST
+    dates: Jun 2025 - Present
+    bullets:
+      - id: exco-1
+        text: Built an Excel and Python reporting tool that cut month-end close prep from 6 hours to 2 hours for a team of 8.
+      - id: exco-2
+        text: Reconciled 1,200+ client accounts per quarter and flagged 35 mismatches before audit.
+  - id: slabs
+    company: Sample Labs
+    title: Software Engineering Intern
+    location: Remote
+    dates: May 2024 - Aug 2024
+    bullets:
+      - id: slabs-1
+        text: Shipped a REST endpoint and 12 unit tests for an internal scheduling service used by 3 teams.
+      - id: slabs-2
+        text: Cut a nightly data-load job from 40 minutes to 15 minutes by batching database writes.
+skills:
+  - label: Engineering
+    text: Python, SQL, TypeScript, Git
+  - label: Business
+    text: Financial reporting, account reconciliation, Excel
+projects: []
+variants:
+  founder_engineer:
+    label: Engineering 2026
+    summary: Finance graduate who builds the tools a team relies on.
+    order: [slabs-1, slabs-2, exco-1, exco-2]
+    drop: []
+  finance_ai:
+    label: Finance x AI 2026
+    summary: Finance graduate who automates reporting with Python.
+    order: [exco-1, exco-2, slabs-1, slabs-2]
+    drop: []

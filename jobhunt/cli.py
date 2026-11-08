@@ -31,6 +31,7 @@ from jobhunt import report as report_module
 from jobhunt import runlog
 from jobhunt import sample as sample_module
 from jobhunt import seed as seed_module
+from jobhunt import setup_wizard
 from jobhunt import sheets as sheets_module
 from jobhunt import shortlist as shortlist_module
 from jobhunt import simplify_import as simplify_import_module
@@ -1787,6 +1788,78 @@ def variant_plan(
             print("\nDry run: nothing written. Pass --apply to write 'set' rows.")
     finally:
         conn.close()
+
+
+def _ask_text(label: str, value: str | None, required: bool = False) -> str | None:
+    if value is not None:
+        return value
+    answer = typer.prompt(label, default="" if not required else ..., show_default=False)
+    return answer.strip() or None
+
+
+def _ask_yes_no(label: str, value: bool | None, default: bool = True) -> bool | None:
+    return value if value is not None else typer.confirm(label, default=default)
+
+
+@app.command()
+def init(
+    force: bool = typer.Option(False, "--force", help="Overwrite local files that already exist."),
+    non_interactive: bool = typer.Option(
+        False, "--non-interactive", help="Never prompt; use only the flags below (unset ones keep the template value)."
+    ),
+    name: str | None = typer.Option(None, "--name", help="Full name."),
+    email: str | None = typer.Option(None, "--email", help="Email address."),
+    phone: str | None = typer.Option(None, "--phone", help="Phone number."),
+    location: str | None = typer.Option(None, "--location", help='City and state, e.g. "Springfield, ST".'),
+    roles: str | None = typer.Option(None, "--roles", help="Target roles, comma separated."),
+    us_authorized: bool | None = typer.Option(
+        None, "--us-authorized/--not-us-authorized", help="Authorized to work in the US."
+    ),
+    needs_sponsorship: bool | None = typer.Option(
+        None, "--needs-sponsorship/--no-sponsorship", help="Will you need visa sponsorship."
+    ),
+    earliest_start: str | None = typer.Option(None, "--earliest-start", help='e.g. "January 2027".'),
+    allow_us_remote: bool | None = typer.Option(
+        None, "--allow-us-remote/--no-us-remote", help="Include US-remote postings."
+    ),
+) -> None:
+    """Set up the local files: copy the templates, ask a few questions, run the doctor."""
+    if not non_interactive:
+        typer.echo("Setup. Press Enter to skip a question and keep the template value.\n")
+        name = _ask_text("Full name", name, required=True)
+        email = _ask_text("Email", email)
+        phone = _ask_text("Phone", phone)
+        location = _ask_text("City, state (e.g. Springfield, ST)", location)
+        roles = _ask_text("Target roles (comma separated)", roles)
+        us_authorized = _ask_yes_no("Authorized to work in the US?", us_authorized)
+        needs_sponsorship = _ask_yes_no("Will you need visa sponsorship?", needs_sponsorship, default=False)
+        earliest_start = _ask_text("Earliest start date (e.g. January 2027)", earliest_start)
+        allow_us_remote = _ask_yes_no("Include US-remote postings?", allow_us_remote)
+    answers = setup_wizard.Answers(
+        name=name,
+        email=email,
+        phone=phone,
+        location=location,
+        roles=[r.strip() for r in roles.split(",") if r.strip()] if roles else None,
+        us_authorized=us_authorized,
+        needs_sponsorship=needs_sponsorship,
+        earliest_start=earliest_start,
+        allow_us_remote=allow_us_remote,
+    )
+    root = setup_wizard.REPO_ROOT
+    typer.echo("Files")
+    typer.echo("\n".join(setup_wizard.run_init(root, answers, force=force)))
+    typer.echo("")
+    typer.echo(setup_wizard.format_checks(setup_wizard.run_doctor(root)))
+
+
+@app.command()
+def doctor() -> None:
+    """Check the local setup: files, [FILL] placeholders, deps, node, Chrome, database."""
+    checks = setup_wizard.run_doctor(setup_wizard.REPO_ROOT)
+    typer.echo(setup_wizard.format_checks(checks))
+    if any(c.status == "fail" for c in checks):
+        raise typer.Exit(1)
 
 
 if __name__ == "__main__":

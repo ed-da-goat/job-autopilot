@@ -72,7 +72,16 @@ TAILORED_DIR = DATA_DIR / "apply_packs" / "resume" / "tailored"
 MASTER_PATH = FINAI_DIR / "master.rm.json"
 FACTS_PATH = DATA_DIR / "facts.local.md"  # read-only: this module never writes data/*.local.*
 TEMPLATE_ENV = "JOBHUNT_RESUME_TEMPLATE"
-DEFAULT_TEMPLATE = Path.home() / "Downloads" / f"{eligibility.resume_basename()}.docx"
+DEFAULT_TEMPLATE = DATA_DIR / "resume.local.docx"  # gitignored; `jobhunt init` seeds it
+TEMPLATE_HINT = (
+    "resume template not found: copy examples/resume.example.docx to data/resume.local.docx "
+    "(`jobhunt init` does this) and replace it with your own resume in the same layout, or set "
+    f"{TEMPLATE_ENV} to the path of your .docx"
+)
+MASTER_HINT = (
+    "master resume missing or unreadable: copy examples/master.example.rm.json to "
+    "data/apply_packs/finai/master.rm.json and replace it with your own resume"
+)
 DOCX_NAME = f"{eligibility.resume_basename()}.docx"
 PDF_NAME = f"{eligibility.resume_basename()}.pdf"
 
@@ -386,7 +395,7 @@ def _tailor(conn: Any, pid: int, run: _Run) -> TailorResult:
 
     template = Path(os.environ.get(TEMPLATE_ENV) or DEFAULT_TEMPLATE).expanduser()
     if not template.is_file():
-        raise _Stop(f"resume template not found (set {TEMPLATE_ENV})")
+        raise _Stop(TEMPLATE_HINT)
     master = _load_master()
     facts = _load_facts()
     master_roles = _master_roles(master)
@@ -1173,7 +1182,7 @@ def _load_master() -> dict:
     try:
         data = json.loads(MASTER_PATH.read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        raise _Stop("master resume missing or unreadable") from None
+        raise _Stop(MASTER_HINT) from None
     if isinstance(data, dict) and isinstance(data.get("resume_data"), dict):
         data = data["resume_data"]
     roles = data.get("workExperience") if isinstance(data, dict) else None
@@ -1198,7 +1207,10 @@ def _load_facts() -> str:
     try:
         facts = FACTS_PATH.read_text(encoding="utf-8").strip()
     except OSError:
-        raise _Stop("facts file missing or unreadable") from None
+        raise _Stop(
+            "facts file missing or unreadable: copy data/facts.local.template.md to "
+            "data/facts.local.md and fill it in"
+        ) from None
     if not facts:
         raise _Stop("facts file is empty")
     return facts

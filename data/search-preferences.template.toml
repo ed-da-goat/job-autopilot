@@ -78,6 +78,12 @@ exclude_title_terms = ["senior", "sr", "contract", "part-time"]
 # Set this if you configure more than three city tiers so remote stays reachable.
 # max_tier = 4
 
+# Auto-apply limits. Both are clamped to at most 100 whatever you write here; leave the
+# defaults unless you have watched several clean runs.
+[autoapply]
+daily_cap = 25                            # submissions per day (max 100)
+per_company_30d = 3                       # submissions to one company per 30 days (max 100)
+
 # The candidate's standing application answers (apply_assist/solve.py), used only by the
 # unattended lane. FAIL CLOSED: delete or leave out any key you do not want answered for
 # you; an unset key is never guessed, the field is asked and handed to you instead. Every

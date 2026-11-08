@@ -25,7 +25,7 @@ import pytest
 from typer.testing import CliRunner
 
 from jobhunt import apply_assist as apply_assist_package
-from jobhunt import applylock
+from jobhunt import applylock, eligibility
 from jobhunt import autoapply as autoapply_module
 from jobhunt import cli as cli_module
 from jobhunt import db as db_module
@@ -62,6 +62,8 @@ RUN_STOPPED_TODO = "Fix the cause; the next scheduled run retries."
 @pytest.fixture(autouse=True)
 def _isolated(monkeypatch, tmp_path):
     monkeypatch.setattr(finai_module.eligibility, "load_preferences", lambda: PREFS)
+    # AutoApplyConfig reads its caps from the preferences: pin them to the code defaults.
+    monkeypatch.setattr(eligibility, "user_preferences", lambda: PREFS)
     # Whatever the CLI or a helper asks for, the only DB these tests can open is the tmp one.
     monkeypatch.setattr(db_module, "connect", lambda *a, **k: REAL_CONNECT(tmp_path / "t.db"))
     # data/apply.lock, data/apply_packs/... and data/autoapply resolve under tmp_path.
@@ -632,7 +634,7 @@ def counts_of(summary):
 
 def test_config_defaults_match_the_spec():
     cfg = AutoApplyConfig()
-    assert (cfg.daily_cap, cfg.company_cap, cfg.company_window_days) == (100, 3, 30)
+    assert (cfg.daily_cap, cfg.company_cap, cfg.company_window_days) == (25, 3, 30)
     assert (cfg.dry_run_quota, cfg.dry_run_per_ats, cfg.dry_company_cap) == (10, 4, 1)
     assert (cfg.pause_s, cfg.max_tier, cfg.max_consecutive_failures) == (20.0, 4, 5)
     assert cfg.handoff_pause_s == 5.0
@@ -2296,7 +2298,7 @@ def test_format_status_lays_out_mode_quota_and_counters(root):
     assert lines[0].endswith("(reviewed)")
     assert lines[1:] == [
         "dry runs: 2/10 (greenhouse 1/4, lever 1/4, ashby 0/4)",
-        "submitted today: 0/100",
+        "submitted today: 0/25",
         "KILL file: absent",
         "needs-you entries: 0",
     ]
@@ -2378,11 +2380,11 @@ def forbid_real_seams(monkeypatch):
 def test_cli_status_prints_the_dry_mode_summary(root):
     result = invoke("status")
     assert result.exit_code == 0
-    for line in ("mode: dry (not armed)", "dry runs: 0/10", "submitted today: 0/100",
+    for line in ("mode: dry (not armed)", "dry runs: 0/10", "submitted today: 0/25",
                  "KILL file: absent", "needs-you entries: 0"):
         assert line in result.output
     write_marker(root, 5)
-    assert "submitted today: 1/100" in invoke("status").output
+    assert "submitted today: 1/25" in invoke("status").output
 
 
 def test_cli_status_require_armed_gates_on_the_arm_state(root):
@@ -3849,3 +3851,11 @@ def test_browser_attempts_per_company_are_capped_whatever_the_outcome(conn, root
     assert summary["processed"] == ids[:2]
     assert summary["skipped"] == {"company_attempts_this_run": 2}
     assert len(rig.tailor.calls) == 2
+
+
+def test_caps_follow_the_autoapply_preferences(monkeypatch):
+    limits = eligibility.load_autoapply({"daily_cap": 7, "per_company_30d": 2})
+    prefs = dataclasses.replace(PREFS, autoapply=limits)
+    monkeypatch.setattr(eligibility, "user_preferences", lambda: prefs)
+    cfg = AutoApplyConfig()
+    assert (cfg.daily_cap, cfg.company_cap) == (7, 2)

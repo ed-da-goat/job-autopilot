@@ -209,3 +209,58 @@ def test_docx_to_pdf_word_no_output_raises(tmp_path, monkeypatch):
     monkeypatch.setattr(docx_resume.subprocess, "run", fake_run)
     with pytest.raises(RuntimeError):
         docx_resume.docx_to_pdf(docx, tmp_path / "out")
+
+
+# --- the shipped Alex Rivera example ---------------------------------------------------
+
+REPO = Path(__file__).resolve().parents[1]
+EXAMPLE_DOCX = REPO / "examples" / "resume.example.docx"
+EXAMPLE_MASTER = REPO / "examples" / "master.example.rm.json"
+EXAMPLE_YAML = REPO / "examples" / "resume.example.yaml"
+
+
+def test_example_docx_parses_as_a_template():
+    texts = docx_resume._paragraph_texts(docx_resume._read_document_xml(EXAMPLE_DOCX))
+    assert "SKILLS/INTERESTS" in texts
+    labels = [label for label, _items in docx_resume.template_skills(texts)]
+    assert labels == ["Technical", "Business", "Honors", "Interests"]
+    assert texts[0] == "ALEX RIVERA"
+
+
+def test_example_docx_is_well_formed_and_has_the_bullet_lists():
+    import xml.dom.minidom
+
+    with zipfile.ZipFile(EXAMPLE_DOCX) as z:
+        for name in z.namelist():
+            xml.dom.minidom.parseString(z.read(name))
+        numbering = z.read("word/numbering.xml").decode()
+    assert 'w:numId="21"' in numbering and 'w:numId="26"' in numbering
+
+
+def test_example_master_renders_into_the_example_template(tmp_path):
+    import json
+
+    master = json.loads(EXAMPLE_MASTER.read_text(encoding="utf-8"))
+    out, texts = docx_resume.render(master, EXAMPLE_DOCX, tmp_path / "out.docx")
+    assert out.is_file()
+    assert any("EXAMPLE CO" in t for t in texts)
+
+
+def test_example_generator_is_byte_stable(tmp_path):
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("make_example_resume", REPO / "scripts" / "make_example_resume.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    assert mod.build(tmp_path / "again.docx").read_bytes() == EXAMPLE_DOCX.read_bytes()
+
+
+def test_example_yaml_loads_and_builds_every_variant():
+    from jobhunt.resume import render as render_module
+
+    data = render_module.load_resume(EXAMPLE_YAML)
+    ids = render_module.known_bullet_ids(data)
+    assert ids == {"exco-1", "exco-2", "slabs-1", "slabs-2"}
+    for variant in render_module.available_variants(data):
+        context = render_module.build_context(data, variant)
+        assert context["experience"]

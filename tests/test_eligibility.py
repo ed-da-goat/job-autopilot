@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from jobhunt.eligibility import TEMPLATE_PREFERENCES_PATH, assess_posting, load_preferences
 
 # Explicit template path: module-level load runs before the conftest isolation
@@ -95,3 +97,24 @@ def test_people_manager_requirement_is_blocked():
     )
     assert result.status == "blocked"
     assert "people_management" in result.blockers
+
+
+def test_template_autoapply_limits_are_the_safe_defaults():
+    assert (PREFERENCES.autoapply.daily_cap, PREFERENCES.autoapply.per_company_30d) == (25, 3)
+
+
+@pytest.mark.parametrize(
+    ("body", "expected"),
+    [
+        ("", (25, 3)),
+        ("[autoapply]\ndaily_cap = 40\nper_company_30d = 1\n", (40, 1)),
+        ("[autoapply]\ndaily_cap = 5000\nper_company_30d = 101\n", (100, 100)),
+        ("[autoapply]\ndaily_cap = 0\nper_company_30d = -4\n", (1, 1)),
+        ('[autoapply]\ndaily_cap = "lots"\nper_company_30d = true\n', (25, 3)),
+    ],
+)
+def test_autoapply_limits_are_read_and_hard_limited_to_100(tmp_path, body, expected):
+    path = tmp_path / "prefs.toml"
+    path.write_text("version = 1\n" + body, encoding="utf-8")
+    limits = load_preferences(path).autoapply
+    assert (limits.daily_cap, limits.per_company_30d) == expected

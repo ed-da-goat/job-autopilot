@@ -190,9 +190,40 @@ class SearchPreferences:
     city_tiers: tuple[tuple[int, tuple[str, ...]], ...] = ()
     standing_answers: StandingAnswers = field(default_factory=StandingAnswers)
     lane: "LaneConfig" = field(default_factory=lambda: LaneConfig())
+    autoapply: "AutoApplyLimits" = field(default_factory=lambda: AutoApplyLimits())
 
 
 LANE_PRESETS = ("target_roles", "finance_ai")
+
+# Hard ceiling on the [autoapply] limits: a config value above this is clamped to it.
+AUTOAPPLY_MAX_CAP = 100
+
+
+@dataclass(frozen=True)
+class AutoApplyLimits:
+    """The [autoapply] table: submissions per day and per company per 30 days."""
+
+    daily_cap: int = 25
+    per_company_30d: int = 3
+
+
+def _capped(value: object, default: int) -> int:
+    """A cap from config: a whole number clamped to 1..AUTOAPPLY_MAX_CAP, else `default`."""
+    if isinstance(value, bool) or not isinstance(value, int):
+        return default
+    return max(1, min(value, AUTOAPPLY_MAX_CAP))
+
+
+def load_autoapply(raw: object) -> AutoApplyLimits:
+    if raw is None:
+        return AutoApplyLimits()
+    if not isinstance(raw, dict):
+        raise ValueError("[autoapply] must be a table")
+    defaults = AutoApplyLimits()
+    return AutoApplyLimits(
+        daily_cap=_capped(raw.get("daily_cap"), defaults.daily_cap),
+        per_company_30d=_capped(raw.get("per_company_30d"), defaults.per_company_30d),
+    )
 
 
 @dataclass(frozen=True)
@@ -276,6 +307,7 @@ def load_preferences(path: Path | None = None) -> SearchPreferences:
         ),
         standing_answers=load_standing_answers(data.get("standing_answers")),
         lane=load_lane(data.get("lane")),
+        autoapply=load_autoapply(data.get("autoapply")),
     )
 
 

@@ -403,6 +403,17 @@ def test_missing_template_is_failed_before_any_model_call(conn, env, pid, monkey
     assert result.status == "failed" and "template" in result.reason and result.calls == 0 and not llm.calls
 
 
+def test_missing_template_message_says_what_to_do(conn, env, pid, monkeypatch):
+    monkeypatch.setenv(A.TEMPLATE_ENV, str(env.template.parent / "nope.docx"))
+    reason = run(conn, pid)[0].reason
+    for needle in ("examples/resume.example.docx", "data/resume.local.docx", A.TEMPLATE_ENV):
+        assert needle in reason
+
+
+def test_default_template_is_the_gitignored_local_copy():
+    assert A.DEFAULT_TEMPLATE == A.DATA_DIR / "resume.local.docx"
+
+
 def test_template_falls_back_to_the_default_path(conn, env, pid, monkeypatch):
     monkeypatch.delenv(A.TEMPLATE_ENV)
     monkeypatch.setattr(A, "DEFAULT_TEMPLATE", env.template.parent / "nope.docx")

@@ -189,8 +189,12 @@ _TODO_ALSO_GUARD = (
 
 @dataclass
 class AutoApplyConfig:
-    daily_cap: int = 100
-    company_cap: int = 3
+    # Both come from [autoapply] in the preferences file (default 25 a day, 3 per company
+    # per 30 days; hard-limited to 100 in eligibility.load_autoapply).
+    daily_cap: int = field(default_factory=lambda: eligibility.user_preferences().autoapply.daily_cap)
+    company_cap: int = field(
+        default_factory=lambda: eligibility.user_preferences().autoapply.per_company_30d
+    )
     company_window_days: int = 30
     dry_run_quota: int = 10
     dry_run_per_ats: int = 4

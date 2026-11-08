@@ -1,0 +1,47 @@
+{
+  "personalInfo": {
+    "name": "Alex Rivera",
+    "email": "alex.rivera@example.com",
+    "phone": "555-0100",
+    "location": "Springfield, ST",
+    "website": "",
+    "linkedin": "linkedin.com/in/alex-rivera-example"
+  },
+  "summary": "",
+  "workExperience": [
+    {
+      "title": "Operations Analyst",
+      "company": "Example Co",
+      "location": "Springfield, ST",
+      "years": "June 2025 - Present",
+      "description": [
+        "Built an Excel and Python reporting tool that cut month-end close prep from 6 hours to 2 hours for a team of 8",
+        "Reconciled 1,200+ client accounts per quarter and flagged 35 mismatches before audit",
+        "Wrote runbooks for 4 recurring back-office workflows so new hires ramp without a handoff call"
+      ]
+    },
+    {
+      "title": "Software Engineering Intern",
+      "company": "Sample Labs",
+      "location": "Remote",
+      "years": "May 2024 - August 2024",
+      "description": [
+        "Shipped a REST endpoint and 12 unit tests for an internal scheduling service used by 3 teams",
+        "Cut a nightly data-load job from 40 minutes to 15 minutes by batching database writes"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Example State University, College of Business",
+      "degree": "Bachelor of Science in Business Administration, Concentration: Finance, GPA: 3.4",
+      "years": "Expected December 2026",
+      "description": "Dean's List, August 2023 - December 2025; Study abroad, January 2025 - May 2025"
+    }
+  ],
+  "personalProjects": [],
+  "additional": {
+    "technicalSkills": [],
+    "awards": []
+  }
+}
