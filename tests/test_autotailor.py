@@ -12,6 +12,7 @@ import json
 import re
 import subprocess
 import zipfile
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -1573,7 +1574,7 @@ def test_the_kind_checks_do_not_depend_on_the_models_case_or_spacing():
 
 
 def test_the_screen_task_tells_the_model_what_the_code_checks():
-    task = A._TASK_SCREEN
+    task = A._task_screen()
     for word in ("preferred", "a plus", "nice to have", "equivalent", "ideally", "desired", "bonus", "typically"):
         assert word in task, word
     for phrase in ("8 or more years", "lower end", "within 90 days of hire", "Master's", "MBA"):
@@ -1959,3 +1960,50 @@ def test_screen_posting_lets_a_spend_gate_error_through(conn, env, pid):
     with pytest.raises(SpendGateError):
         A.screen_posting(conn, pid, complete=FakeLLM(SubscriptionUnavailableError("signed out")))
     assert reports(conn, pid) == []
+
+
+# ---- the software_role drop is a finance_ai lane rule only ----
+
+TARGET_PREFS = replace(PREFS, lane=LaneConfig(preset="target_roles"))
+
+
+@pytest.fixture
+def target_roles(monkeypatch):
+    monkeypatch.setattr(finai.eligibility, "load_preferences", lambda: TARGET_PREFS)
+
+
+def test_screen_prompt_lists_software_role_only_under_finance_ai():
+    finance = A._prompt_screen([], "", "posting")
+    assert '- "software_role"' in finance and "the license or the engineering role)" in finance
+    assert finance == A._prompt_screen([], "", "posting")
+    expected = A._TASK_SCREEN.replace("{standing}", "").replace("{software_kind}", A._SOFTWARE_KIND_LINE)
+    assert expected.replace("{quote_role}", ", the license or the engineering role") in finance
+
+
+def test_screen_prompt_has_no_software_role_under_target_roles(target_roles):
+    prompt = A._prompt_screen([], "", "posting")
+    assert "software_role" not in prompt and "pure software-engineering" not in prompt
+    assert "engineering role)" not in prompt and "the degree or the license)" in prompt
+    assert '- "license"' in prompt and "Use null whenever" in prompt
+
+
+def test_task_one_drop_clause_only_under_finance_ai(monkeypatch):
+    assert "pure software-engineering role" in A._task_one()
+    monkeypatch.setattr(finai.eligibility, "load_preferences", lambda: TARGET_PREFS)
+    assert "pure software-engineering" not in A._task_one() and "{software_drop}" not in A._task_one()
+
+
+def test_software_role_reply_is_ignored_under_target_roles(conn, env, screen_on, target_roles):
+    quote = REQUIREMENTS["software_role"]
+    posting = add(conn, "t-swe-target", desc=JD_BODY + " " + quote, company="Delta")
+    result, llm = run(conn, posting, screen_reply(match_before=80, hard_mismatch=mismatch("software_role", quote)),
+                      stage1(), stage2())
+    assert result.status == "tailored", result.reason
+    assert result.screen_calls == 1 and [c["model"] for c in llm.calls] == ["haiku", "sonnet", "sonnet"]
+
+
+def test_software_role_reply_still_drops_under_finance_ai(conn, env, screen_on):
+    quote = REQUIREMENTS["software_role"]
+    posting = add_requiring(conn, "t-swe-finance", quote)
+    result, _ = run(conn, posting, screen_reply(match_before=80, hard_mismatch=mismatch("software_role", quote)))
+    assert result.status == "dropped" and result.reason.startswith(A.HARD_MISMATCH_KINDS["software_role"])

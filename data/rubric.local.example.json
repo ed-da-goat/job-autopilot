@@ -1,0 +1,165 @@
+{
+  "version": 1001,
+  "changelog": {
+    "3": "seniority_fit: neutralize 'member of technical staff' / 'member, technical staff' before tier matching so the rank-neutral MTS title (Vapi/OpenAI/Perplexity, etc.) no longer false-matches the 'staff' tier-0 pattern; falls through to seniority_default (12) unless another explicit signal (e.g. 'senior') is present. No weight changes.",
+    "4": "Score up fintech / applied-AI-in-finance, business/finance-degree-friendly postings, and genuinely early-grad/new-grad roles: category_bonus.fintech 7 -> 10 (now the top vertical, tied with ai-infra/fde-solutions territory); new degree_language_bonus (+6, keyword hit on finance/business-degree-friendly language); new early_grad_bonus (+6, keyword hit on new-grad/early-career language). Old score rows are preserved; this is a version bump, not a rewrite.",
+    "5": "company_signal stopped silently zeroing out the 269 auto-discovered/auto-promoted companies (category_bonus has no entry for those category strings, so they fell to base=0 instead of the neutral midpoint the missing-row case already gets): auto-discovered/auto-promoted rows with why_fit still NULL now get the same neutral_midpoint (5/10) as an unseeded company, via new auto_categories. Added score_inferred_vertical: title/description keyword match on fintech (payments, trading, banking, capital markets, crypto, custody) or ai-infra (ai agent, agentic, llm, forward deployed, applied ai — bare 'agent' dropped after the read-only projection caught it false-firing on 'Agent Experience' courier-ops titles) language awards the same points as the metadata category_bonus path, combined via max() (never additive) so curated companies can't double-dip and unknown/auto companies aren't capped below a textually-obvious vertical fit. Nothing in scoring reads posted_at (verified by grep) — no recency component exists or was added; workday/builtin's structural NULL posted_at was already a non-issue for scoring.",
+    "6": "seniority_fit now treats the title as authoritative rank evidence and separately parses explicit candidate experience requirements. Incidental description words such as senior/staff no longer suppress early-career roles; conflicting early-career titles with 3+ year requirements use the explicit requirement. Each score stores the exact seniority evidence for auditability. Added explicit adjacent target-title coverage for deployment strategist, customer engineer, technical operator, and AI GTM roles.",
+    "8": "v8 — finance x AI hybrid postings (the candidate's stated #1 preference) were scoring below the tier-1 cutoff even when company_signal was already maxed via the fintech category_bonus/inferred_vertical (that path caps at 10 and can't credit domain depth in the posting text itself). Added finance_hybrid_bonus (+10, applies once): keyword hit on finance-domain depth language — payments/tax/wealth/trading/banking-infrastructure context, 'finance degree', GTM-engineering-at-fintech, and applied-AI-in-finance phrasing — distinct from degree_language_bonus (credits degree-major openness, not domain content) and from company_signal's already-capped vertical credit. Purely additive on top of the existing 5-component + 2-bonus total (still clamped to 100); no existing components, weights, or stored v7 score rows were changed. (v7 itself — adding 'junior' to early_grad_bonus keywords — shipped without its own changelog entry.)",
+    "1001": "Example local override for a general software / AI new grad (copy to data/rubric.local.json; the version is high so its score rows never collide with a shipped version). Values only, schema identical to v8: category_bonus ai-infra 8 -> 10, fde-solutions 8 -> 10, devtools 6 -> 8, yc-early 7 -> 8, fintech 10 -> 6 (fintech is just another vertical, not the top one); finance_hybrid_bonus.points 10 -> 3 and degree_language_bonus.points 6 -> 2 (finance-domain depth and non-CS-major openness no longer carry a posting). Component weights, keywords and tiers are unchanged."
+  },
+  "auto_categories": ["auto-discovered", "auto-promoted"],
+  "components": {
+    "degree_fit": 15,
+    "skill_match": 30,
+    "seniority_fit": 20,
+    "founder_leverage": 25,
+    "company_signal": 10
+  },
+  "unknown_midpoints": {
+    "degree_fit": 8,
+    "company_signal": 5
+  },
+  "category_bonus": {
+    "ai-infra": 10,
+    "fde-solutions": 10,
+    "fintech": 6,
+    "yc-early": 8,
+    "devtools": 8
+  },
+  "vertical_keywords": {
+    "fintech": ["payments", "trading", "banking", "capital markets", "crypto", "custody"],
+    "ai-infra": ["ai agent", "agentic", "llm", "forward deployed", "applied ai"]
+  },
+  "degree_language_bonus": {
+    "points": 2,
+    "keywords": [
+      "finance degree",
+      "business degree",
+      "business administration",
+      "finance background",
+      "non-traditional background",
+      "all majors",
+      "any major",
+      "non-cs"
+    ]
+  },
+  "early_grad_bonus": {
+    "points": 6,
+    "keywords": [
+      "new grad",
+      "new graduate",
+      "early career",
+      "early-career",
+      "university grad",
+      "recent graduate",
+      "entry level",
+      "entry-level",
+      "class of 2026",
+      "class of 2027",
+      "2026 grads",
+      "2027 grads",
+      "junior"
+    ]
+  },
+  "finance_hybrid_bonus": {
+    "points": 3,
+    "keywords": [
+      "finance degree",
+      "finance background",
+      "fintech",
+      "payments infrastructure",
+      "wealth management",
+      "tax software",
+      "tax automation",
+      "sales tax",
+      "trading systems",
+      "trading platform",
+      "capital markets",
+      "treasury",
+      "underwriting",
+      "compliance automation",
+      "banking infrastructure",
+      "accounting automation",
+      "financial services",
+      "financial institutions",
+      "finance teams",
+      "finance ops",
+      "spend management",
+      "expense management",
+      "digital assets",
+      "ai for finance",
+      "applied ai in finance"
+    ]
+  },
+  "keywords": {
+    "hard_filter_intern": ["intern", "internship", "co-op", "coop"],
+    "hard_filter_apprentice": ["apprentice", "apprenticeship"],
+    "target_role_titles": ["engineer", "engineering", "developer", "software", "swe", "devops", "sre", "architect", "solutions", "sales engineer", "forward deployed", "deployment strategist", "customer engineer", "technical operator", "ai gtm", "technical", "infrastructure", "platform", "backend", "frontend", "full stack", "full-stack", "founding", "data scientist", "machine learning", "ml", "ai", "implementation", "consultant"],
+    "degree_no_required": ["no degree required", "no degree is required", "degree not required", "degree is not required"],
+    "degree_fields": ["computer science", "comp sci", "computer sci", "software engineering"],
+    "degree_stems": ["bachelor", "bachelor's", "b.s.", "bs", "degree"],
+    "degree_softener": ["or equivalent", "or related", "equivalent experience", "equivalent practical", "related field"],
+    "skill_core": [
+      ["python"],
+      ["fastapi"],
+      ["postgres", "postgresql"],
+      ["llm"],
+      ["ai agent", "agents", "agentic"],
+      ["sqlalchemy"]
+    ],
+    "skill_secondary": [
+      ["sqlite"],
+      ["oauth"],
+      ["docker"],
+      ["fly.io"],
+      ["api design", "rest api"],
+      ["htmx"],
+      ["tailwind"],
+      ["typescript", "javascript"],
+      ["aws"],
+      ["gcp", "google cloud"],
+      ["prompt"],
+      ["rag"],
+      ["evals"],
+      ["alembic"],
+      ["pytest"]
+    ],
+    "seniority_tiers": [
+      {"score": 0, "patterns": ["staff", "principal", "lead ", "manager", "director", "vp", "head of"]},
+      {"score": 4, "patterns": ["senior"]},
+      {"score": 8, "patterns": ["3-5 years", "4+ years"]},
+      {"score": 14, "patterns": ["software engineer ii", "1-3 years", "2+ years", "mid-level"]},
+      {"score": 20, "patterns": ["new grad", "university grad", "entry level", "early career", "junior", "engineer i", "associate "]}
+    ],
+    "seniority_year_tiers": [
+      {"minimum": 6, "score": 0},
+      {"minimum": 3, "score": 8},
+      {"minimum": 1, "score": 14},
+      {"minimum": 0, "score": 20}
+    ],
+    "seniority_default": 12,
+    "seniority_neutral_phrases": ["member of technical staff", "member, technical staff"],
+    "start_fit_near_term": ["2026"],
+    "start_fit_near_term_markers": ["grad", "december"],
+    "start_fit_far_term": ["summer 2027", "fall 2027"],
+    "start_fit_immediate": ["immediate", "asap", "start date: flexible"],
+    "founder_leverage": [
+      {"name": "forward deployed", "patterns": ["forward deployed"], "title_double": true},
+      {"name": "solutions engineer", "patterns": ["solutions engineer"], "title_double": true},
+      {"name": "sales engineer", "patterns": ["sales engineer"], "title_double": true},
+      {"name": "founding engineer", "patterns": ["founding engineer"], "title_double": true},
+      {"name": "founding team", "patterns": ["founding team"], "title_double": true},
+      {"name": "early stage", "patterns": ["early stage", "early-stage"], "title_double": false},
+      {"name": "zero to one", "patterns": ["0 to 1", "zero to one"], "title_double": false},
+      {"name": "customer-facing", "patterns": ["customer-facing", "customer facing"], "title_double": false},
+      {"name": "wear many hats", "patterns": ["wear many hats"], "title_double": false},
+      {"name": "implementation engineer", "patterns": ["implementation engineer"], "title_double": false},
+      {"name": "gtm", "patterns": ["gtm"], "title_double": false},
+      {"name": "customer success", "patterns": ["work directly with customers", "customer success"], "title_double": false},
+      {"name": "startup experience", "patterns": ["startup experience"], "title_double": false},
+      {"name": "ambiguity", "patterns": ["ambiguity"], "title_double": false},
+      {"name": "full ownership", "patterns": ["full ownership", "end to end", "end-to-end"], "title_double": false}
+    ]
+  }
+}

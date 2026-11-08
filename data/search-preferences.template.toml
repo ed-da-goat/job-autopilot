@@ -68,7 +68,7 @@ preset = "target_roles"
 # include_title_terms = ["software engineer", "backend engineer"]
 # Title terms that drop a posting even when it matches (blocked_title_terms and intern/co-op
 # titles are always dropped too).
-exclude_title_terms = ["senior", "sr", "contract", "part-time"]
+exclude_title_terms = ["senior", "sr", "staff", "principal", "lead", "manager", "contract", "part-time"]
 # Any-of terms the job description must contain. Same matching rules as include_title_terms.
 # Empty or unset means the JD is not checked.
 # require_jd_terms = ["python", "typescript"]

@@ -31,6 +31,12 @@ def _isolate_search_preferences(monkeypatch, tmp_path: Path):
     )
 
 
+@pytest.fixture(autouse=True)
+def _isolate_rubric(monkeypatch, tmp_path: Path):
+    # Same for the scoring rubric: never the operator's gitignored data/rubric.local.json.
+    monkeypatch.setattr("jobhunt.rubric.LOCAL_RUBRIC_PATH", tmp_path / "rubric.local.json")
+
+
 class MockResponse:
     """Minimal stand-in for requests.Response used across source parse tests."""
 

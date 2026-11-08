@@ -4,10 +4,11 @@ import json
 
 import pytest
 from jobhunt import db as db_module
+from jobhunt import rubric as rubric_module
 from jobhunt import scoring as scoring_module
-from jobhunt.rubric import load_rubric
+from jobhunt.rubric import DEFAULT_RUBRIC_PATH, load_rubric
 
-RUBRIC = load_rubric()
+RUBRIC = load_rubric(DEFAULT_RUBRIC_PATH)  # the shipped rubric, never an operator's local override
 
 
 def make_posting(
@@ -621,3 +622,50 @@ def test_score_posting_total_never_exceeds_100():
     company_row = {"name": "Anthropic", "category": "ai-infra", "verified": "yes"}
     result = scoring_module.score_posting(posting, RUBRIC, company_row)
     assert result["total"] <= 100
+
+
+# ------------------------------------------------------- local override ---
+
+
+def _write_rubric(path, **changes):
+    import json
+
+    data = json.loads(rubric_module.DEFAULT_RUBRIC_PATH.read_text(encoding="utf-8"))
+    data.update(changes)
+    path.write_text(json.dumps(data), encoding="utf-8")
+    return path
+
+
+def test_load_rubric_uses_the_local_override_when_present(tmp_path, monkeypatch):
+    local = tmp_path / "rubric.local.json"
+    monkeypatch.setattr(rubric_module, "LOCAL_RUBRIC_PATH", local)
+    assert rubric_module.load_rubric()["version"] == 8  # absent: the shipped rubric
+    _write_rubric(local, version=77, changelog={"77": "local test override"})
+    assert rubric_module.load_rubric()["version"] == 77
+
+
+def test_invalid_local_override_fails_with_a_clear_error(tmp_path, monkeypatch):
+    local = tmp_path / "rubric.local.json"
+    monkeypatch.setattr(rubric_module, "LOCAL_RUBRIC_PATH", local)
+    _write_rubric(local, components={"degree_fit": 50})
+    with pytest.raises(rubric_module.RubricError, match=r"invalid rubric .*rubric\.local\.json.*components"):
+        rubric_module.load_rubric()
+    local.write_text("{not json", encoding="utf-8")
+    with pytest.raises(rubric_module.RubricError, match="cannot read rubric"):
+        rubric_module.load_rubric()
+
+
+def test_override_without_a_changelog_entry_for_its_version_is_rejected(tmp_path, monkeypatch):
+    local = tmp_path / "rubric.local.json"
+    monkeypatch.setattr(rubric_module, "LOCAL_RUBRIC_PATH", local)
+    _write_rubric(local, version=78)
+    with pytest.raises(rubric_module.RubricError, match="changelog needs an entry for version 78"):
+        rubric_module.load_rubric()
+
+
+def test_shipped_rubric_and_the_example_override_pass_validation():
+    shipped = rubric_module.load_rubric(DEFAULT_RUBRIC_PATH)
+    example = rubric_module.load_rubric(DEFAULT_RUBRIC_PATH.parent.parent / "data" / "rubric.local.example.json")
+    assert example["version"] != shipped["version"] and str(example["version"]) in example["changelog"]
+    assert set(example) == set(shipped) and example["keywords"] == shipped["keywords"]
+    assert example["components"] == shipped["components"]

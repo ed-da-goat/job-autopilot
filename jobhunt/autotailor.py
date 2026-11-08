@@ -27,7 +27,7 @@ facts in the prompt, so the model is never trusted with the resume itself:
 * Before the first Sonnet call, a Haiku screen reads the posting against the
   master resume and drops only the plain misses: a score under SCREEN_DROP_BELOW,
   or a hard mismatch (a required graduate degree, 8+ required years, a license or
-  clearance the resume does not list, a pure software role) whose quote the code
+  clearance the resume does not list, a pure software role under the finance_ai lane only) whose quote the code
   finds verbatim in the posting and checks against its kind (`_states`: a plain
   requirement, never one that is preferred, optional or due after hire). It is
   one more subscription call that does not count toward MAX_CALLS
@@ -152,7 +152,7 @@ _REMINDER = (
 
 _TASK_ONE = """Task: act as a senior recruiter at the company in the posting.
 1. Score the current resume (<resume_roles>) against the posting, honestly; an inflated score teaches nothing. "match_before": integer 0-100. "dimensions": an object with exactly the integer keys keyword_match, skills_overlap, experience_proof, education_fit, role_alignment (each 0-100). "missing_keywords": the top five posting terms the resume lacks (at most 5 strings). "red_flags": what a hiring manager would flag, as short strings, including "likely ATS auto-reject" when keyword_match is below 50.
-2. Drop test: if match_before is below 40 and no true keyword closes the gap, or the posting is a pure software-engineering role (writing production code, no finance, research, strategy or AI-deployment work), set "drop" to a one-sentence reason and "roles" to an empty list. Otherwise set "drop" to null.
+2. Drop test: if match_before is below 40 and no true keyword closes the gap{software_drop}, set "drop" to a one-sentence reason and "roles" to an empty list. Otherwise set "drop" to null.
 3. Otherwise tailor. "roles": one entry per role in the given order, each {"company": <the exact company name>, "bullets": [<the rewritten bullets>]}, following the rules below.
 
 {rules}
@@ -171,14 +171,32 @@ Reply with one JSON object with the keys: skim_flags, match_after, unsupported_c
 _TASK_SCREEN = """Task: you are the quick first screen in a hiring pipeline. Read the posting in <job_description> against the resume in <resume_roles>. Nothing is rewritten here: you only score the fit and flag a plain mismatch.
 {standing}
 1. Score the resume against the posting, honestly; an inflated score teaches nothing. "match_before": integer 0-100. "dimensions": an object with exactly the integer keys keyword_match, skills_overlap, experience_proof, education_fit, role_alignment (each 0-100). "missing_keywords": the top five posting terms the resume lacks (at most 5 strings). "red_flags": what a hiring manager would flag, as short strings.
-2. "hard_mismatch": null, unless the posting plainly requires something the candidate lacks. Otherwise an object {"kind": <one kind from the list>, "quote": <the exact words of the posting that state the requirement, copied character for character, with enough context to show it is required>}. The quote must itself contain the requirement (the number of years, the degree, the license or the engineering role) and none of the words preferred, a plus, nice to have, equivalent, ideally, desired, bonus or typically; code checks every quote against its kind and ignores one that fails. The kinds:
+2. "hard_mismatch": null, unless the posting plainly requires something the candidate lacks. Otherwise an object {"kind": <one kind from the list>, "quote": <the exact words of the posting that state the requirement, copied character for character, with enough context to show it is required>}. The quote must itself contain the requirement (the number of years, the degree{quote_role}) and none of the words preferred, a plus, nice to have, equivalent, ideally, desired, bonus or typically; code checks every quote against its kind and ignores one that fails. The kinds:
 - "graduate_degree": the posting requires a PhD, Master's, MBA or JD. A graduate degree that is only preferred, or that experience or a bachelor's degree can replace, does not count.
 - "years": the posting requires 8 or more years of experience as a minimum. For a range, the lower end counts ("8-10 years" qualifies, "5-8 years" does not). The quote must say experience, a minimum, at least or required in the same clause as the number; a company's or team's years ("founded 10 years ago", "15 years of combined experience") never count.
 - "license": the posting requires a credential or clearance that the candidate must already hold, and the quote names it: CPA, CFA, CAIA, FRM, a Series exam, the SIE, FINRA registration, a security clearance or TS/SCI, bar admission, an actuarial exam or credential (ASA, FSA), or a chartered accountant. The word "license" or "charter" alone is not enough. "Preferred", "a plus", "in progress", "able to obtain", "willing to" and "within 90 days of hire" do not count.
-- "software_role": the posting is a pure software-engineering role: writing production code is the job, with no finance, research, strategy or AI-deployment work in it. The quote must name the role as a software, backend, frontend, full-stack, iOS, Android, mobile, platform, infrastructure, DevOps or site reliability engineer or developer (or "SWE") and run to a full sentence. A data, ML or AI engineer is not this kind.
-Use null whenever the requirement is not stated in plain words, is only preferred, or you are not sure: a posting dropped by mistake is lost for good, while a kept one only gets a closer look.
+{software_kind}Use null whenever the requirement is not stated in plain words, is only preferred, or you are not sure: a posting dropped by mistake is lost for good, while a kept one only gets a closer look.
 
 Reply with one JSON object with the keys: match_before, dimensions, missing_keywords, red_flags, hard_mismatch."""
+
+
+# The pure-software-engineering drop belongs to the finance x AI lane only. A candidate whose
+# lane is target_roles (software, AI, FDE or solutions engineer) must keep those postings, so
+# the software_role kind and the drop-test clause are built in only for the "finance_ai" preset.
+_SOFTWARE_KIND_LINE = (
+    '- "software_role": the posting is a pure software-engineering role: writing production code is the job, with no finance, research, strategy or AI-deployment work in it. The quote must name the role as a software, backend, frontend, full-stack, iOS, Android, mobile, platform, infrastructure, DevOps or site reliability engineer or developer (or "SWE") and run to a full sentence. A data, ML or AI engineer is not this kind.\n'
+)
+_SOFTWARE_DROP = (
+    ", or the posting is a pure software-engineering role (writing production code, no finance, "
+    "research, strategy or AI-deployment work)"
+)
+_QUOTE_ROLE_FINANCE = ", the license or the engineering role"
+_QUOTE_ROLE_OTHER = " or the license"
+
+
+def _software_drop_on() -> bool:
+    """Whether the software_role drop applies: only under the finance_ai lane preset."""
+    return eligibility.load_preferences().lane.preset == "finance_ai"
 
 
 @dataclass
@@ -772,6 +790,8 @@ def _read_mismatch(value: Any, posting: str) -> tuple[str, str] | None:
     if not isinstance(kind, str) or not isinstance(quote, str):
         return None
     kind = kind.strip().lower()
+    if kind == "software_role" and not _software_drop_on():
+        return None
     wanted = _squash(quote)
     if kind not in HARD_MISMATCH_KINDS or len(wanted) < SCREEN_QUOTE_MIN or wanted not in _squash(posting):
         return None
@@ -955,11 +975,16 @@ def _read_roles(experience: list[dict], data: dict) -> tuple[list[list[str]] | N
 
 
 def _prompt_one(ctx: _Ctx, problems: list[str] | None) -> str:
-    parts = [_blocks(ctx), _TASK_ONE.replace("{rules}", _rules(ctx))]
+    parts = [_blocks(ctx), _task_one().replace("{rules}", _rules(ctx))]
     if problems:
         parts.append(_rejected(problems))
     parts.append(_REMINDER)
     return "\n\n".join(parts)
+
+
+def _task_one() -> str:
+    """_TASK_ONE with the pure-software drop clause only under the finance_ai preset."""
+    return _TASK_ONE.replace("{software_drop}", _SOFTWARE_DROP if _software_drop_on() else "")
 
 
 def _prompt_two(ctx: _Ctx, draft: list[list[str]], problems: list[str] | None) -> str:
@@ -970,6 +995,14 @@ def _prompt_two(ctx: _Ctx, draft: list[list[str]], problems: list[str] | None) -
     return "\n\n".join(parts)
 
 
+def _task_screen() -> str:
+    """_TASK_SCREEN with the software_role kind listed only under the finance_ai preset."""
+    on = _software_drop_on()
+    return _TASK_SCREEN.replace("{software_kind}", _SOFTWARE_KIND_LINE if on else "").replace(
+        "{quote_role}", _QUOTE_ROLE_FINANCE if on else _QUOTE_ROLE_OTHER
+    )
+
+
 def _prompt_screen(master_roles: list[dict], standing: str, posting: str) -> str:
     """The screen's prompt: the resume's roles and the posting, each in its own block
     and defanged like call 1's, then the task (with the candidate standing) and the
@@ -977,7 +1010,7 @@ def _prompt_screen(master_roles: list[dict], standing: str, posting: str) -> str
     return "\n\n".join([
         _block("resume_roles", json.dumps(master_roles, ensure_ascii=False, indent=1)),
         _block("job_description", posting),
-        _TASK_SCREEN.replace("{standing}", standing),
+        _task_screen().replace("{standing}", standing),
         _REMINDER,
     ])
 
