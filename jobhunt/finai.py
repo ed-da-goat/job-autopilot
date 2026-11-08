@@ -24,6 +24,10 @@ from jobhunt.sources import workday
 
 REPORT_KIND = "match_report"
 TAILORED_LABEL = "Tailored (RM) 2026"
+
+
+def tailored_variant_path() -> str:
+    return f"data/apply_packs/resume/tailored/<posting_id>/{eligibility.resume_basename()}.pdf"
 WORKED_STAGES = ("applied", "replied", "interviewing", "offer", "passed", "closed")
 DIMENSIONS = (
     "keyword_match", "skills_overlap", "experience_proof", "education_fit", "role_alignment",
@@ -366,7 +370,7 @@ def record_report(conn: sqlite3.Connection, posting_id: int, report: dict[str, A
         if variant is None:
             variant = lifecycle.save_resume_variant(
                 conn, label=TAILORED_LABEL,
-                path=f"data/apply_packs/resume/tailored/<posting_id>/{eligibility.resume_basename()}.pdf",
+                path=tailored_variant_path(),
             )
         # ensure_application overwrites channel/ref/notes, so carry existing values through.
         prior = conn.execute("SELECT * FROM applications WHERE posting_id=?", (posting_id,)).fetchone()

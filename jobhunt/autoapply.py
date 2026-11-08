@@ -611,7 +611,11 @@ def _candidate_pool(conn: sqlite3.Connection, cfg: AutoApplyConfig) -> list[_Can
 
 def _default_tailor(conn: sqlite3.Connection, posting_id: int) -> Any:
     from jobhunt import autotailor
+    from jobhunt.resume import docx_resume
 
+    # Checked before the first model call: without a converter every tailor attempt would
+    # spend a call, fail at the PDF step and block the posting for days.
+    docx_resume.require_pdf_converter()
     return autotailor.tailor_posting(conn, posting_id)
 
 
@@ -1037,6 +1041,11 @@ class _Run:
         try:
             result = self.tailor_fn(self.conn, cand.posting_id)
         except Exception as exc:
+            from jobhunt.resume.docx_resume import PdfConverterMissing
+
+            if isinstance(exc, PdfConverterMissing):
+                self.fatal = f"{exc}; run stopped, posting #{cand.posting_id} not blocked"
+                return None
             if _is_spend_gate_error(exc):
                 # Not this posting's fault and not a failure to route around: the model is
                 # unavailable (the claude CLI is signed out or at its limit) or the spend gate

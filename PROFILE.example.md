@@ -22,7 +22,7 @@ Open to relocation (SF, NYC, anywhere). Available from December 2026.
 
 ## Education
 
-- Example State University, College of Business: B.S. Business Administration, Finance concentration, expected Dec 2026
+- Example State University, College of Computing: B.S. Computer Science, expected Dec 2026
 - GPA 3.4 (state only if a form directly asks; never on the resume)
 
 ## The differentiator: built and ran a product end to end
@@ -47,5 +47,5 @@ Founder & Engineer, Example Ventures LLC (2026 to present, Atlanta, GA).
 ## Constraints
 
 - Not a CPA; no accounting or legal credential.
-- No CS degree; the degree is Business Administration (Finance).
+- The degree is a B.S. in Computer Science; claim no graduate degree.
 - Never claim a completed sale, client, or exit that is not listed above.

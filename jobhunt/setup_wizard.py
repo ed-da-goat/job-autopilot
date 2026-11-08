@@ -35,6 +35,10 @@ ANSWERS_LOCAL = "data/answers.local.md"
 PLACEHOLDER_FILES = (ANSWERS_LOCAL, "data/facts.local.md", "PROFILE.md", PREFS_LOCAL)
 PERSONA_MARKER = "Alex Rivera"
 DB_RELATIVE = "data/jobhunt.db"
+# The row db.SCHEMA seeds as the default resume variant. The unattended lane tailors a PDF per
+# posting from the resume below, so the variant only has to exist, point at it and be reviewed.
+DEFAULT_VARIANT_LABEL = "Founder Engineer 2026"
+DEFAULT_VARIANT_PATH = "data/resume.local.docx"
 REQUIRED_MODULES = ("typer", "fastapi", "uvicorn", "playwright", "yaml", "jinja2", "requests", "gspread")
 
 
@@ -107,15 +111,10 @@ def set_answer_line(text: str, key: str, value: str) -> str:
     return text.rstrip("\n") + f"\n{key}: {value}\n"
 
 
-def _work_authorization(authorized: bool | None, sponsorship: bool | None) -> str | None:
-    if authorized is None and sponsorship is None:
-        return None
-    parts = []
-    if authorized is not None:
-        parts.append("Authorized to work in the US" if authorized else "Not authorized to work in the US")
-    if sponsorship is not None:
-        parts.append("will require sponsorship" if sponsorship else "no sponsorship required")
-    return "; ".join(parts)
+def _work_authorization(authorized: bool | None) -> str | None:
+    """Stored as the bare Yes or No the forms ask for ("Are you legally authorized to work in
+    the US?"): the filler types or picks a yes/no word, and a sentence matches no menu option."""
+    return None if authorized is None else ("Yes" if authorized else "No")
 
 
 def _city_state(location: str) -> tuple[str, str] | None:
@@ -148,14 +147,26 @@ def apply_to_prefs(text: str, a: Answers) -> str:
     return text
 
 
+def _split_name(name: str) -> tuple[str, str] | tuple[None, None]:
+    """"Alex Q. Rivera" -> ("Alex Q.", "Rivera"); a single word is a first name only."""
+    parts = _one_line(name).split(" ")
+    if len(parts) < 2:
+        return parts[0] or None, None
+    return " ".join(parts[:-1]), parts[-1]
+
+
 def apply_to_answers(text: str, a: Answers) -> str:
+    first, last = _split_name(a.name) if a.name else (None, None)
     pairs = {
         "full_name": a.name,
+        "first_name": first,
+        "last_name": last,
+        "sponsorship": None if a.needs_sponsorship is None else ("Yes" if a.needs_sponsorship else "No"),
         "email": a.email,
         "phone": a.phone,
         "location": a.location,
         "earliest_start": a.earliest_start,
-        "work_authorization": _work_authorization(a.us_authorized, a.needs_sponsorship),
+        "work_authorization": _work_authorization(a.us_authorized),
     }
     for key, value in pairs.items():
         if value:
@@ -206,7 +217,65 @@ def run_init(root: Path, answers: Answers, force: bool = False) -> list[str]:
 
     if "data/resume.local.docx" in fresh:
         lines.append("  Replace data/resume.local.docx and data/apply_packs/finai/master.rm.json with your own resume.")
+    lines += register_in_db(root, overwrite=force)
     return lines
+
+
+def register_in_db(root: Path, overwrite: bool = False) -> list[str]:
+    """Load data/answers.local.md into application_answers and register the default resume
+    variant, so the first `autoapply run` is not skipped as not_ready. Safe to repeat: stored
+    answers are kept unless `overwrite`, and a variant someone already reviewed is left alone."""
+    from jobhunt import db as db_module
+    from jobhunt.cli import _import_answers_file
+    from jobhunt.finai import TAILORED_LABEL, tailored_variant_path
+    from jobhunt.lifecycle import save_resume_variant
+
+    lines: list[str] = []
+    conn = db_module.connect(root / DB_RELATIVE)
+    try:
+        answers_file = root / ANSWERS_LOCAL
+        if answers_file.is_file():
+            rows = _import_answers_file(conn, answers_file, overwrite)
+            imported = sum(1 for bucket, _k, _r in rows if bucket == "imported")
+            unfilled = sum(1 for bucket, _k, _r in rows if bucket == "skipped_fill")
+            note = f"{imported} answers imported into {DB_RELATIVE}"
+            if unfilled:
+                note += f" ({unfilled} still [FILL]; fill them, then run `uv run python -m jobhunt init` again)"
+            lines.append(f"  {ANSWERS_LOCAL}: {note}")
+        if _reviewed_variant_count(conn) == 0 and (root / DEFAULT_VARIANT_PATH).is_file():
+            save_resume_variant(
+                conn,
+                label=DEFAULT_VARIANT_LABEL,
+                path=DEFAULT_VARIANT_PATH,
+                purpose="Default variant; the lane tailors a PDF per posting from this resume",
+                reviewed=True,
+            )
+            lines.append(f"  resume variant '{DEFAULT_VARIANT_LABEL}': registered as reviewed ({DEFAULT_VARIANT_PATH})")
+        if not _tailored_variant_reviewed(conn):
+            # Every tailored PDF is linked to this variant; unreviewed, the readiness check
+            # refuses the posting (resume_not_reviewed) and no submission could be recorded.
+            save_resume_variant(
+                conn,
+                label=TAILORED_LABEL,
+                path=tailored_variant_path(),
+                purpose="Per-posting tailored resume made by the autoapply lane",
+                reviewed=True,
+            )
+            lines.append(f"  resume variant '{TAILORED_LABEL}': registered as reviewed")
+    finally:
+        conn.close()
+    return lines
+
+
+def _tailored_variant_reviewed(conn: sqlite3.Connection) -> bool:
+    from jobhunt.finai import TAILORED_LABEL
+
+    row = conn.execute("SELECT reviewed_at FROM resume_variants WHERE label=?", (TAILORED_LABEL,)).fetchone()
+    return bool(row and row[0])
+
+
+def _reviewed_variant_count(conn: sqlite3.Connection) -> int:
+    return conn.execute("SELECT COUNT(*) FROM resume_variants WHERE reviewed_at IS NOT NULL").fetchone()[0]
 
 
 # --- doctor -------------------------------------------------------------------------------
@@ -244,6 +313,9 @@ def _placeholders(root: Path) -> list[str]:
 
 def _example_persona_left(root: Path) -> list[str]:
     left = []
+    answers = root / ANSWERS_LOCAL
+    if answers.is_file() and "Example State" in answers.read_text(encoding="utf-8"):
+        left.append(f"{ANSWERS_LOCAL} still names the example school (school, degree): replace them with your own")
     for rel in ("PROFILE.md", "data/facts.local.md"):
         path = root / rel
         if path.is_file() and PERSONA_MARKER in path.read_text(encoding="utf-8"):
@@ -279,6 +351,73 @@ def _db_state(root: Path) -> tuple[bool, str]:
     except sqlite3.Error:
         return False, f"{DB_RELATIVE} has no companies table"
     return (count > 0), f"{count} companies in {DB_RELATIVE}"
+
+
+def _required_answer_keys(root: Path) -> list[str]:
+    for rel in (PREFS_LOCAL, "data/search-preferences.template.toml"):
+        path = root / rel
+        if path.is_file():
+            try:
+                data = tomllib.loads(path.read_text(encoding="utf-8"))
+            except tomllib.TOMLDecodeError:
+                continue
+            return list(data.get("required_application_fields", []))
+    return []
+
+
+def _pdf_converter_check() -> Check:
+    from jobhunt.resume import docx_resume
+
+    found = docx_resume.pdf_converter()
+    if found:
+        return Check("pdf converter", "ok", found)
+    return Check("pdf converter", "warn", f"{docx_resume.NO_CONVERTER_HELP}; autoapply cannot tailor a resume without one")
+
+
+def _answers_check(root: Path) -> Check:
+    """application_answers must hold every required_application_fields key, or the unattended
+    lane skips each posting as not_ready:missing_required_answer:<key>."""
+    from jobhunt.apply_assist.profile_store import answer_for_preference
+
+    fix = "run `uv run python -m jobhunt init`, which loads data/answers.local.md; fill any [FILL] first"
+    db = root / DB_RELATIVE
+    stored: dict[str, str] = {}
+    if db.is_file():
+        try:
+            conn = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+            try:
+                stored = {k: v for k, v in conn.execute("SELECT semantic_key, value FROM application_answers")}
+            finally:
+                conn.close()
+        except sqlite3.Error:
+            stored = {}
+    missing = [k for k in _required_answer_keys(root) if not answer_for_preference(stored, k)]
+    if missing:
+        return Check("answers", "warn", f"answers not imported: {', '.join(missing)} - {fix}")
+    return Check("answers", "ok", "required answers are in the database")
+
+
+def _resume_variant_check(root: Path) -> Check:
+    from jobhunt.finai import TAILORED_LABEL
+
+    fix = "run `uv run python -m jobhunt init`, which registers the default and the tailored resume variants as reviewed"
+    db = root / DB_RELATIVE
+    count, tailored = 0, False
+    if db.is_file():
+        try:
+            conn = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+            try:
+                count = _reviewed_variant_count(conn)
+                tailored = _tailored_variant_reviewed(conn)
+            finally:
+                conn.close()
+        except sqlite3.Error:
+            count = 0
+    if count == 0:
+        return Check("resume variant", "warn", f"no reviewed resume variant; every posting parks at select_resume_variant - {fix}")
+    if not tailored:
+        return Check("resume variant", "warn", f"'{TAILORED_LABEL}' is not reviewed; autoapply would stop at resume_not_reviewed - {fix}")
+    return Check("resume variant", "ok", f"{count} reviewed")
 
 
 def run_doctor(root: Path) -> list[Check]:
@@ -336,6 +475,9 @@ def run_doctor(root: Path) -> list[Check]:
 
     seeded, detail = _db_state(root)
     checks.append(Check("database", "ok" if seeded else "warn", detail if seeded else f"not seeded: {detail}"))
+    checks.append(_pdf_converter_check())
+    checks.append(_answers_check(root))
+    checks.append(_resume_variant_check(root))
     return checks
 
 
@@ -350,6 +492,8 @@ def next_commands(checks: list[Check]) -> list[str]:
         steps.append("edit the files listed above, then: uv run python -m jobhunt doctor")
     if by_name["database"].status != "ok":
         steps.append("uv run python -m jobhunt seed")
+    if by_name["answers"].status != "ok" or by_name["resume variant"].status != "ok":
+        steps.append("uv run python -m jobhunt init        # loads your answers and registers the default resume variant")
     steps += [
         "uv run python -m jobhunt harvest",
         "uv run python -m jobhunt score",

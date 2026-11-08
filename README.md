@@ -3,11 +3,11 @@
 **A local-first job-search engine that harvests postings from public ATS APIs, scores them against your profile, and fills Greenhouse, Lever and Ashby applications under hard caps.**
 
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)
-![Tests: ~8.4k](https://img.shields.io/badge/tests-~8.4k%20network--free-brightgreen)
+[![tests](https://github.com/ed-da-goat/job-autopilot/actions/workflows/test.yml/badge.svg)](https://github.com/ed-da-goat/job-autopilot/actions/workflows/test.yml)
 ![Local-first](https://img.shields.io/badge/local--first-your%20data%20stays%20on%20disk-blue)
 ![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey)
 
-![The Today view: ranked postings and the next action for each](docs/screenshots/today.png)
+![Demo: the Today queue, a posting's evidence and workspace, the pipeline board and analytics](docs/demo.gif)
 
 ## Numbers from the author's own run
 
@@ -32,7 +32,7 @@ flowchart LR
     B --> B1["Pre-fill in a visible browser"] --> B2["You review and submit"]
 ```
 
-**Auto-apply lane.** Greenhouse, Lever and Ashby only. The lane tailors your resume, fills the form from your stored answers, and runs a submit gate that blocks on sign-in walls, CAPTCHAs, human checks and required fields it cannot answer. Until you run `jobhunt autoapply arm` it is dry: it fills and gates but never hands anything off. Once armed, it leaves each filled form open in a visible browser tab at the Submit button. The pipeline never clicks Submit itself; you do. Caps: 100 forms a day, 3 per company per 30 days.
+**Auto-apply lane.** Greenhouse, Lever and Ashby only. The lane tailors your resume, fills the form from your stored answers, and runs a submit gate that blocks on sign-in walls, CAPTCHAs, human checks and required fields it cannot answer. Until you run `jobhunt autoapply arm` it is dry: it fills and gates but never hands anything off. Once armed, it leaves each filled form open in a visible browser tab at the Submit button. The pipeline never clicks Submit itself; you do. Caps: 25 forms a day by default (configurable up to 100), 3 per company per 30 days.
 
 **Assisted lane.** Every other ATS. `jobhunt apply` and `jobhunt apply-queue` pre-fill the hosted form in a visible browser, and you review and submit.
 
@@ -60,27 +60,31 @@ Prerequisites:
 
 ## Make it yours
 
-1. **Set your preferences.** Copy the template to its gitignored local name:
+1. **Run the setup wizard.**
 
    ```bash
-   cp data/search-preferences.template.toml data/search-preferences.local.toml
+   uv run python -m jobhunt init     # copies the templates, asks ~9 questions, runs the doctor
+   uv run python -m jobhunt doctor   # re-check any time
    ```
 
-   The fields that matter: `candidate_name` and `contact_email` (output file names and the HTTP User-Agent), `target_roles`, `allowed_countries` and `allow_us_remote`, `max_eligible_years` and `review_years_max`, `blocked_title_terms` and `review_title_terms` (titles dropped or sent to a review queue), and the `[[city_tiers]]` location ranking.
+   `init` copies every template to its gitignored local name, writes your answers into them, loads your form answers into the database, and puts the example resume at `data/resume.local.docx`. It never overwrites an existing file without `--force`; `--non-interactive` takes every answer as a flag. The doctor fails on any `[FILL]` left and warns while example-persona data is still in place.
 
-   The `[lane]` table decides which postings auto-apply works on. The default preset, `target_roles`, takes titles matching your `target_roles` (or `include_title_terms`), drops `exclude_title_terms` (the template excludes senior, contract and part-time roles), keeps configured cities and US-remote roles, and can require JD keywords (`require_jd_terms`) or a `min_score`. `preset = "finance_ai"` switches to the author's original finance × AI routing.
+   Everything below lives in `data/search-preferences.local.toml`. The fields that matter: `candidate_name` and `contact_email` (output file names and the HTTP User-Agent), `target_roles`, `allowed_countries` and `allow_us_remote`, `max_eligible_years` and `review_years_max`, `blocked_title_terms` and `review_title_terms` (titles dropped or sent to a review queue), and the `[[city_tiers]]` location ranking.
+
+   The `[lane]` table decides which postings auto-apply works on. The default preset, `target_roles`, takes titles matching your `target_roles` (or `include_title_terms`), drops `exclude_title_terms` (the template excludes senior, staff, principal, lead, manager, contract and part-time roles), keeps configured cities and US-remote roles, and can require JD keywords (`require_jd_terms`) or a `min_score`. `preset = "finance_ai"` switches to the author's original finance × AI routing.
 
    The `[standing_answers]` table holds the answers auto-apply may give for you: earliest start, salary, travel, current employer, school and similar. It **fails closed**: delete any key you do not want answered, and an unset answer is never guessed. The field is asked and the form is handed to you instead. Every value must be true of you.
 
-2. **Add your profile and facts.**
+   `[autoapply]` sets the caps: `daily_cap` (default 25) and `per_company_30d` (default 3), both hard-limited to 100.
 
-   ```bash
-   cp PROFILE.example.md PROFILE.md
-   cp data/facts.local.template.md data/facts.local.md
-   cp data/answers.local.template.md data/answers.local.md
-   ```
+2. **Replace the example persona with you.**
 
-   `PROFILE.md` is your positioning and work history. `facts.local.md` is the only source drafted essay answers may draw on. `answers.local.md` holds your standard form answers. Fill in every `[FILL]` value, then load them with `uv run python -m jobhunt apply-profile import`. The structured resume lives at `resume/resume.yaml` (gitignored); `jobhunt resume render` turns it into a PDF.
+   - `PROFILE.md`: your positioning and work history.
+   - `data/facts.local.md`: the only source drafted essay answers may draw on.
+   - `data/answers.local.md`: your standard form answers. After editing, reload them with `uv run python -m jobhunt apply-profile import`.
+   - `data/resume.local.docx`: your resume, in the same layout as `examples/resume.example.docx` (it needs a `SKILLS/INTERESTS` section of `Label:<tab>items` lines). Set `JOBHUNT_RESUME_TEMPLATE` to point somewhere else.
+   - `data/apply_packs/finai/master.rm.json`: the structured master resume tailoring rewrites from; start from `examples/master.example.rm.json`.
+   - Optional: copy `data/rubric.local.example.json` to `data/rubric.local.json` to re-weight scoring for your search (the shipped `jobhunt/rubric.json` leans toward fintech and applied AI).
 
 3. **Build your database and run the pipeline.**
 
@@ -109,7 +113,7 @@ Prerequisites:
    ```
 
    The `--approved` text is stored with the arm time. `jobhunt autoapply disarm` returns to dry mode at any point.
-4. **Caps** (`AutoApplyConfig` in `jobhunt/autoapply.py`): 100 forms per day, 3 per company per rolling 30 days, 5 failures or 15 blocks in a row stops the run. A form counts when it is filled, and a handed-off form counts like a click. Blocked postings are not retried for 7 days.
+4. **Caps** (`[autoapply]` in your local config): 25 forms per day and 3 per company per rolling 30 days by default, never above 100; 5 failures or 15 blocks in a row stops the run. A form counts when it is filled, and a handed-off form counts like a click. Blocked postings are not retried for 7 days.
 5. **Schedule it (macOS).** `scripts/install-launchd.sh autoapply` writes the plist into `~/Library/LaunchAgents` and **prints** the `launchctl` commands without running them. `make schedule-install-autoapply` does the install and load in one step, and only once `jobhunt autoapply status --require-armed` passes. The same script handles `daily` and `watch`.
 
 ## Guardrails
@@ -149,11 +153,14 @@ daily.py, watch.py    scheduled entry points
 ## Testing
 
 ```bash
-make test       # about 8.4k tests, network-free, about 5 minutes
+make test       # about 8.4k tests, network-free, about 5 minutes (CI runs them on every push)
 make ui-test    # frontend tests (vitest)
 ```
 
 ## Known limits
+
+- The shipped scoring rubric and the seed company list (`data/seed_companies.md`) come from the author's fintech and applied-AI search, so a pure software search scores lower out of the box. Scores only rank the queue; use `data/rubric.local.json` and your own seed list to retune.
+- The apply lanes drive Google Chrome through Playwright, so Chrome must be installed.
 
 - Handoff mode needs you at the machine: the forms wait in browser tabs for your click.
 - Scheduling is macOS-only (launchd). Everything else runs anywhere Python and Node do.

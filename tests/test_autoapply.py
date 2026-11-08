@@ -1648,6 +1648,30 @@ def test_an_unknown_submit_status_is_an_error(conn, root):
 
 # --- the spend gate ---------------------------------------------------------------------------
 
+def test_a_missing_pdf_converter_stops_the_run_and_blocks_nothing(conn, root):
+    from jobhunt.resume.docx_resume import NO_CONVERTER_HELP, PdfConverterMissing
+
+    first, second = add_many(conn, 2)
+    rig = Rig(conn, root, tailor={first: PdfConverterMissing(NO_CONVERTER_HELP)})
+    summary = rig.run()
+
+    assert summary["aborted"] is True
+    assert summary["stop_reason"] == f"{NO_CONVERTER_HELP}; run stopped, posting #{first} not blocked"
+    assert summary["counts"]["tailor_failed"] == 0
+    assert autoapply_module.load_blocked(root) == {}
+    assert rig.tailor.calls == [first]  # never reached the second
+
+
+def test_the_default_tailor_checks_for_a_converter_before_any_model_call(conn, monkeypatch):
+    from jobhunt import autotailor
+    from jobhunt.resume import docx_resume
+
+    monkeypatch.setattr(docx_resume, "pdf_converter", lambda: None)
+    monkeypatch.setattr(autotailor, "tailor_posting", lambda *a, **k: pytest.fail("model call before converter check"))
+    with pytest.raises(docx_resume.PdfConverterMissing):
+        autoapply_module._default_tailor(conn, 1)
+
+
 
 def test_a_spend_gate_refusal_stops_the_run_and_blocks_nothing(conn, root):
     first, second, third = add_many(conn, 3)

@@ -9,9 +9,9 @@ contact:
   linkedin: linkedin.com/in/alex-rivera-example
   github: github.com/alex-rivera-example
 education:
-  - school: Example State University, College of Business
+  - school: Example State University, College of Computing
     location: Atlanta, GA
-    degree: Bachelor of Science in Business Administration, Finance concentration
+    degree: Bachelor of Science in Computer Science
     dates: Dec 2026
 experience:
   - id: exco
@@ -43,11 +43,11 @@ projects: []
 variants:
   founder_engineer:
     label: Engineering 2026
-    summary: Finance graduate who builds the tools a team relies on.
+    summary: Computer science graduate who builds the tools a team relies on.
     order: [slabs-1, slabs-2, exco-1, exco-2]
     drop: []
   finance_ai:
     label: Finance x AI 2026
-    summary: Finance graduate who automates reporting with Python.
+    summary: Computer science graduate who automates reporting with Python.
     order: [exco-1, exco-2, slabs-1, slabs-2]
     drop: []

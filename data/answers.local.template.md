@@ -10,17 +10,23 @@
 # them up by name.
 
 full_name: Alex Rivera
+first_name: Alex
+last_name: Rivera
 email: alex.rivera@example.com
 phone: [FILL]
 location: Atlanta, GA — open to relocation, SF/NYC included
 linkedin: https://www.linkedin.com/in/alex-rivera-example/
 github: [FILL]
 portfolio: [FILL]
-work_authorization: [FILL: e.g. US citizen, no sponsorship required]
+work_authorization: [FILL: Yes or No - are you legally authorized to work in the US]
+sponsorship: [FILL: Yes or No - will you need visa sponsorship]
+country: United States
 earliest_start: December 2026 / January 2027
 salary_expectation: [FILL]
 willing_to_relocate: Yes
-degree: B.S. Business Administration, Finance — Example State University, Dec 2026, GPA 3.4
+degree: B.S. Computer Science — Example State University, Dec 2026, GPA 3.4
+school: Example State University
+field_of_study: Computer Science
 pronouns_eeo_demographics: Decline to self-identify (default — change per-application if you want to answer)
 how_did_you_hear: Company careers page
 references: [FILL]

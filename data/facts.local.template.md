@@ -15,8 +15,8 @@
 #   * "sells" / "runs outbound sales", NEVER "sold", unless a sale really
 #     happened. No completed-sale, acquisition, or exit claims you can't back.
 #   * Alex is NOT a CPA and holds no accounting or legal credential.
-#   * Alex does NOT hold a CS degree — Business Administration, Finance
-#     concentration.
+#   * Alex holds a B.S. in Computer Science (expected Dec 2026), no graduate
+#     degree.
 #   * GPA (3.4) is stated only if a question directly asks for it.
 #
 # Format: plain prose under each heading. Write it the way you'd actually
@@ -55,8 +55,8 @@ outbound, discovery calls, product demos, CRM pipeline design.
 
 ## Education
 
-Example State University, College of Business — Bachelor of Science in
-Business Administration, Finance concentration, expected Dec 2026. Study
+Example State University, College of Computing — Bachelor of Science in
+Computer Science, expected Dec 2026. Study
 abroad in Lyon, France, Summer 2025. GPA 3.4 — state only if a question
 directly asks for it.
 
@@ -89,7 +89,7 @@ relocation, New York City included, and any hybrid schedule is fine.
 ## Constraints — things to NEVER claim
 
 - No CPA, no accounting credential, no legal credential.
-- No CS degree. Business Administration, Finance concentration.
+- The degree is a B.S. in Computer Science; no graduate degree.
 - Never say Example Ventures has "sold" or completed a sale — it is
   pre-revenue with no signed client as of this writing. "Sells," "built and
   runs the outbound pipeline for," etc. are fine; "sold X to Y" is not.

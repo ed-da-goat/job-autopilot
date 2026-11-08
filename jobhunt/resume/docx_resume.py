@@ -297,6 +297,41 @@ def _word_to_pdf(docx: Path, out_dir: Path) -> Path:
         dst.unlink(missing_ok=True)
 
 
+WORD_APP = Path("/Applications/Microsoft Word.app")
+NO_CONVERTER_HELP = (
+    "no .docx to PDF converter works here: install LibreOffice "
+    "(macOS: `brew install --cask libreoffice`; Linux: your package manager) or Microsoft Word"
+)
+
+
+class PdfConverterMissing(RuntimeError):
+    """Neither LibreOffice nor Word can convert here; no tailored resume PDF can be made."""
+
+
+def pdf_converter() -> str | None:
+    """Name of a converter that exists ("libreoffice" or "word"), else None. Probes
+    `soffice --version` rather than trusting `which`: a Homebrew cask whose app was deleted
+    leaves a symlink that is on PATH and still fails on use."""
+    soffice = shutil.which("soffice") or SOFFICE
+    if Path(soffice).exists():
+        try:
+            probe = subprocess.run([soffice, "--version"], capture_output=True, timeout=60)
+            if probe.returncode == 0:
+                return "libreoffice"
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    if WORD_APP.exists():
+        return "word"
+    return None
+
+
+def require_pdf_converter() -> str:
+    found = pdf_converter()
+    if found is None:
+        raise PdfConverterMissing(NO_CONVERTER_HELP)
+    return found
+
+
 def docx_to_pdf(docx: Path, out_dir: Path) -> Path:
     """LibreOffice if it works, else Microsoft Word via AppleScript."""
     out_dir.mkdir(parents=True, exist_ok=True)

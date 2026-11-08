@@ -1304,7 +1304,7 @@ _ANSWERS_FILE_KEY_MAP: dict[str, str] = {
 # Sensitive file keys that never get imported: they always resolve
 # interactively at fill-time, so storing a value for them is pointless.
 _ANSWERS_FILE_SENSITIVE_SKIP: frozenset[str] = frozenset({"pronouns_eeo_demographics"})
-_ANSWERS_FILE_FILL_PLACEHOLDER = "[FILL]"
+_ANSWERS_FILE_FILL_PLACEHOLDER = "[FILL"
 _ANSWERS_FILE_WARN_CHARS = 60
 
 APPLY_PROFILE_IMPORT_FILE_OPTION = typer.Option(
@@ -1343,7 +1343,7 @@ def _import_answers_file(
     existing = apply_profile_store_module.get_answers(conn)
     rows: list[tuple[str, str, str]] = []
     for file_key, raw_value in _parse_answers_file(path):
-        if raw_value == _ANSWERS_FILE_FILL_PLACEHOLDER:
+        if raw_value.startswith(_ANSWERS_FILE_FILL_PLACEHOLDER):  # "[FILL]" and "[FILL: hint]"
             rows.append(("skipped_fill", file_key, "value is [FILL] — not filled in yet"))
             continue
         if file_key in _ANSWERS_FILE_SENSITIVE_SKIP:

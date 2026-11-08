@@ -31,6 +31,9 @@ def root(tmp_path, monkeypatch) -> Path:
         (tree / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(REAL / rel, tree / rel)
     monkeypatch.setattr(sw, "REPO_ROOT", tree)
+    from jobhunt.resume import docx_resume
+
+    monkeypatch.setattr(docx_resume, "pdf_converter", lambda: "libreoffice")  # no soffice probe
     return tree
 
 
@@ -65,7 +68,7 @@ def test_answers_land_in_both_files(root):
         "phone: 555-0142",
         "location: Atlanta, GA",
         "earliest_start: February 2027",
-        "work_authorization: Authorized to work in the US; no sponsorship required",
+        "work_authorization: Yes",
     ):
         assert line in answers.splitlines()
     assert "Alex Rivera" not in answers.split("full_name:")[1].splitlines()[0]
@@ -203,3 +206,202 @@ def test_doctor_flags_missing_python_modules(root, monkeypatch):
     monkeypatch.setattr(sw, "REQUIRED_MODULES", ("definitely_not_a_module_xyz",))
     check = {c.name: c for c in sw.run_doctor(root)}["python deps"]
     assert check.status == "fail" and "uv sync" in check.detail
+
+
+# --- the database side of init: answers and the default resume variant ------------------------
+
+
+def _stored(root) -> dict[str, str]:
+    import sqlite3
+
+    conn = sqlite3.connect(root / sw.DB_RELATIVE)
+    try:
+        return dict(conn.execute("SELECT semantic_key, value FROM application_answers"))
+    finally:
+        conn.close()
+
+
+def _reviewed(root) -> list[tuple[str, str]]:
+    import sqlite3
+
+    conn = sqlite3.connect(root / sw.DB_RELATIVE)
+    try:
+        return conn.execute("SELECT label, path FROM resume_variants WHERE reviewed_at IS NOT NULL").fetchall()
+    finally:
+        conn.close()
+
+
+def test_init_loads_the_answers_into_the_database(root):
+    result = run(*ARGS)
+    assert result.exit_code == 0, result.output
+    stored = _stored(root)
+    assert stored["full_name"] == "Jordan Casey"
+    assert stored["email"] == "jordan.casey@example.com"
+    assert stored["start_date"] == "February 2027"  # earliest_start in the file
+    assert stored["work_authorization"] == "Yes"  # a bare Yes/No: the filler picks a menu word from it
+    assert "github" not in stored  # still [FILL]
+    assert "answers imported into data/jobhunt.db" in result.output
+
+
+def test_init_registers_the_default_resume_variant_as_reviewed(root):
+    result = run(*ARGS)
+    from jobhunt.finai import TAILORED_LABEL, tailored_variant_path
+
+    assert _reviewed(root) == [
+        (sw.DEFAULT_VARIANT_LABEL, sw.DEFAULT_VARIANT_PATH),
+        (TAILORED_LABEL, tailored_variant_path()),
+    ]
+    assert "registered as reviewed" in result.output
+
+
+def test_init_twice_keeps_stored_answers_and_the_reviewed_variant(root):
+    import sqlite3
+
+    run(*ARGS)
+    conn = sqlite3.connect(root / sw.DB_RELATIVE)
+    conn.execute("UPDATE application_answers SET value='Edited by hand' WHERE semantic_key='phone'")
+    conn.execute("UPDATE resume_variants SET path='mine.pdf' WHERE label=?", (sw.DEFAULT_VARIANT_LABEL,))
+    conn.commit()
+    conn.close()
+    again = run("init", "--non-interactive")
+    assert again.exit_code == 0, again.output
+    assert _stored(root)["phone"] == "Edited by hand"
+    assert {label: path for label, path in _reviewed(root)}[sw.DEFAULT_VARIANT_LABEL] == "mine.pdf"
+    assert "registered as reviewed" not in again.output
+
+
+def test_init_force_replaces_the_stored_answers(root):
+    import sqlite3
+
+    run(*ARGS)
+    conn = sqlite3.connect(root / sw.DB_RELATIVE)
+    conn.execute("UPDATE application_answers SET value='Edited by hand' WHERE semantic_key='phone'")
+    conn.commit()
+    conn.close()
+    assert run(*ARGS, "--force").exit_code == 0
+    assert _stored(root)["phone"] == "555-0142"
+
+
+def test_init_picks_up_answers_filled_in_later(root):
+    run(*ARGS)
+    path = root / sw.ANSWERS_LOCAL
+    path.write_text(path.read_text(encoding="utf-8").replace("github: [FILL]", "github: https://github.com/jc"), encoding="utf-8")
+    assert run("init", "--non-interactive").exit_code == 0
+    assert _stored(root)["github"] == "https://github.com/jc"
+
+
+def test_doctor_flags_answers_and_variant_not_registered(root):
+    run(*ARGS)
+    import sqlite3
+
+    conn = sqlite3.connect(root / sw.DB_RELATIVE)
+    conn.execute("DELETE FROM application_answers WHERE semantic_key IN ('full_name', 'start_date')")
+    conn.execute("UPDATE resume_variants SET reviewed_at=NULL")
+    conn.commit()
+    conn.close()
+    checks = {c.name: c for c in sw.run_doctor(root)}
+    assert checks["answers"].status == "warn"
+    assert checks["answers"].detail.startswith("answers not imported: full_name, earliest_start")
+    assert checks["resume variant"].status == "warn" and "select_resume_variant" in checks["resume variant"].detail
+    result = run("doctor")
+    assert "uv run python -m jobhunt init" in result.output
+    assert run("init", "--non-interactive").exit_code == 0
+    checks = {c.name: c for c in sw.run_doctor(root)}
+    assert checks["answers"].status == "ok" and checks["resume variant"].status == "ok"
+
+
+def test_doctor_warns_answers_and_variant_on_a_tree_with_no_database(root):
+    checks = {c.name: c for c in sw.run_doctor(root)}
+    assert checks["answers"].status == "warn" and checks["resume variant"].status == "warn"
+
+
+def test_doctor_reports_a_missing_pdf_converter(root, monkeypatch):
+    from jobhunt.resume import docx_resume
+
+    monkeypatch.setattr(docx_resume, "pdf_converter", lambda: None)
+    check = {c.name: c for c in sw.run_doctor(root)}["pdf converter"]
+    assert check.status == "warn" and "brew install --cask libreoffice" in check.detail
+    monkeypatch.setattr(docx_resume, "pdf_converter", lambda: "word")
+    assert {c.name: c for c in sw.run_doctor(root)}["pdf converter"].detail == "word"
+
+
+def test_a_dangling_soffice_is_not_a_converter(tmp_path, monkeypatch):
+    """A Homebrew cask whose app was deleted leaves a `soffice` that is on PATH and fails."""
+    from jobhunt.resume import docx_resume
+
+    broken = tmp_path / "soffice"
+    broken.write_text("#!/bin/sh\nexit 127\n")
+    broken.chmod(0o755)
+    monkeypatch.setattr(docx_resume.shutil, "which", lambda name: str(broken))
+    monkeypatch.setattr(docx_resume, "WORD_APP", tmp_path / "no-word.app")
+    assert docx_resume.pdf_converter() is None
+    with pytest.raises(docx_resume.PdfConverterMissing, match="install LibreOffice"):
+        docx_resume.require_pdf_converter()
+    broken.write_text("#!/bin/sh\necho LibreOffice 26.2\n")
+    assert docx_resume.pdf_converter() == "libreoffice"
+
+
+def test_the_example_persona_is_a_cs_new_grad():
+    import json
+
+    texts = [
+        (REAL / rel).read_text(encoding="utf-8")
+        for rel in (
+            "PROFILE.example.md", "data/answers.local.template.md", "data/facts.local.template.md",
+            "data/search-preferences.template.toml", "examples/master.example.rm.json", "examples/resume.example.yaml",
+        )
+    ]
+    for text in texts:
+        assert "Business Administration" not in text
+    answers = (REAL / "data/answers.local.template.md").read_text(encoding="utf-8")
+    assert "degree: B.S. Computer Science \u2014 Example State University, Dec 2026, GPA 3.4" in answers
+    standing = tomllib.loads((REAL / "data/search-preferences.template.toml").read_text(encoding="utf-8"))["standing_answers"]
+    assert "Bachelor of Science in Computer Science" in standing["education_text"]
+    master = json.loads((REAL / "examples/master.example.rm.json").read_text(encoding="utf-8"))
+    assert master["education"][0]["degree"] == "Bachelor of Science in Computer Science, GPA: 3.4"
+    import zipfile
+
+    with zipfile.ZipFile(REAL / "examples/resume.example.docx") as z:
+        body = z.read("word/document.xml").decode("utf-8")
+    assert "Bachelor of Science in Computer Science" in body and "Business Administration" not in body
+
+
+def test_doctor_flags_an_unreviewed_tailored_variant(root):
+    import sqlite3
+
+    from jobhunt.finai import TAILORED_LABEL
+
+    run(*ARGS)
+    conn = sqlite3.connect(root / sw.DB_RELATIVE)
+    conn.execute("UPDATE resume_variants SET reviewed_at=NULL WHERE label=?", (TAILORED_LABEL,))
+    conn.commit()
+    conn.close()
+    check = {c.name: c for c in sw.run_doctor(root)}["resume variant"]
+    assert check.status == "warn" and "resume_not_reviewed" in check.detail
+    assert run("init", "--non-interactive").exit_code == 0
+    assert {c.name: c for c in sw.run_doctor(root)}["resume variant"].status == "ok"
+
+
+def test_init_stores_the_name_parts_sponsorship_and_country(root):
+    assert run(*ARGS).exit_code == 0
+    stored = _stored(root)
+    assert (stored["first_name"], stored["last_name"]) == ("Jordan", "Casey")
+    assert stored["sponsorship"] == "No"
+    assert stored["country"] == "United States"
+    assert run("init", "--force", "--non-interactive", "--name", "Mary Ann van Dyke", "--needs-sponsorship").exit_code == 0
+    stored = _stored(root)
+    assert (stored["first_name"], stored["last_name"], stored["sponsorship"]) == ("Mary Ann van", "Dyke", "Yes")
+
+
+def test_sponsorship_stays_unanswered_until_the_user_answers(root):
+    assert run("init", "--non-interactive", "--name", "Jordan Casey").exit_code == 0
+    stored = _stored(root)
+    assert "sponsorship" not in stored and "work_authorization" not in stored  # "[FILL: hint]" is a blank
+    joined = "\n".join({c.name: c for c in sw.run_doctor(root)}["placeholders"].items)
+    assert "sponsorship:" in joined
+
+
+def test_doctor_flags_the_example_school_left_in_the_answers(root):
+    run(*ARGS)
+    example = [i for i in {c.name: c for c in sw.run_doctor(root)}["example data"].items if "example school" in i]
+    assert example
