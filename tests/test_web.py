@@ -10,6 +10,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from fastapi.testclient import TestClient
 
+import jobhunt.web.app as web_app_module
 from jobhunt import db as db_module
 from jobhunt.rubric import load_rubric
 from jobhunt.web.app import app, get_db_path
@@ -24,6 +25,20 @@ def client(tmp_path):
         yield TestClient(app), db_path
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def spa_index(tmp_path, monkeypatch):
+    """A stub React build. `/` serves SPA_INDEX and 503s when it is missing; the real build is
+    gitignored and absent in CI, so point the route at a stub instead of requiring `make ui-build`."""
+    index = tmp_path / "spa" / "index.html"
+    index.parent.mkdir()
+    index.write_text(
+        "<!doctype html><html><head><title>Job Search OS</title></head><body></body></html>",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(web_app_module, "SPA_INDEX", index)
+    return index
 
 
 def _make_posting(
@@ -45,7 +60,7 @@ def _make_posting(
         conn.close()
 
 
-def test_board_renders_with_empty_funnel(client):
+def test_board_renders_with_empty_funnel(client, spa_index):
     http, db_path = client
     resp = http.get("/")
     assert resp.status_code == 200
