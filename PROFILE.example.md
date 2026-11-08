@@ -27,7 +27,7 @@ Open to relocation (SF, NYC, anywhere). Available from December 2026.
 
 ## The differentiator: built and ran a product end to end
 
-Founder & Engineer, Example Ventures LLC (2026 to present, Springfield, ST).
+Founder & Engineer, Example Ventures LLC (2026 to present, Atlanta, GA).
 
 - Solo-built and deployed a multi-tenant AI email-drafting agent: FastAPI, async SQLAlchemy, Postgres with row-level security.
 - Human approval is enforced in the database: a trigger makes it impossible for the AI to send; the audit log is append-only; credentials are encrypted with AES-256-GCM.
@@ -35,7 +35,7 @@ Founder & Engineer, Example Ventures LLC (2026 to present, Springfield, ST).
 
 ## Work history beyond the venture
 
-- Example Co, Financial Advisor Assistant, Jan 2024 to present, Springfield, ST: cut tax-filing preparation time 30% with AI-assisted due diligence; built Excel retirement-scenario models; produced quarterly performance reports.
+- Example Co, Financial Advisor Assistant, Jan 2024 to present, Atlanta, GA: cut tax-filing preparation time 30% with AI-assisted due diligence; built Excel retirement-scenario models; produced quarterly performance reports.
 - Student Entrepreneurs Club, Director of Finance, May 2025 to present: manages a $25,000 budget; cut reimbursement payout time 50%.
 - Example Retail, Fulfillment Expert, Oct 2021 to Jan 2024: sustained 100+ items/hour on a 20-person team while studying full time.
 

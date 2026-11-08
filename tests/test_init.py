@@ -19,7 +19,7 @@ runner = CliRunner()
 ARGS = [
     "init", "--non-interactive",
     "--name", "Jordan Casey", "--email", "jordan.casey@example.com", "--phone", "555-0142",
-    "--location", "Springfield, ST", "--roles", "data engineer, analytics engineer",
+    "--location", "Atlanta, GA", "--roles", "data engineer, analytics engineer",
     "--us-authorized", "--no-sponsorship", "--earliest-start", "February 2027", "--no-us-remote",
 ]
 
@@ -57,13 +57,13 @@ def test_answers_land_in_both_files(root):
     assert prefs["target_start"] == "February 2027"
     assert prefs["allow_us_remote"] is False
     assert prefs["sponsorship_status"] == "not_required"
-    assert prefs["home_state"] == "st" and prefs["home_metro"] == ["springfield"]
+    assert prefs["home_state"] == "ga" and prefs["home_metro"] == ["atlanta"]
     answers = (root / sw.ANSWERS_LOCAL).read_text(encoding="utf-8")
     for line in (
         "full_name: Jordan Casey",
         "email: jordan.casey@example.com",
         "phone: 555-0142",
-        "location: Springfield, ST",
+        "location: Atlanta, GA",
         "earliest_start: February 2027",
         "work_authorization: Authorized to work in the US; no sponsorship required",
     ):
@@ -129,7 +129,7 @@ def test_unanswered_questions_keep_the_template_values(root):
 
 def test_interactive_prompts_fill_the_answers(root):
     typed = "\n".join([
-        "Taylor Kim", "taylor.kim@example.com", "555-0177", "Springfield, ST", "backend engineer, sre",
+        "Taylor Kim", "taylor.kim@example.com", "555-0177", "Atlanta, GA", "backend engineer, sre",
         "y", "n", "March 2027", "y", "",
     ])
     result = runner.invoke(app, ["init"], input=typed)

@@ -157,3 +157,25 @@ def test_complete_conference_action_missing_id_404s(client):
     http, _ = client
     resp = http.post("/api/conference_actions/999999/complete", json={})
     assert resp.status_code == 404
+
+
+def test_conferences_command_missing_file_prints_hint_and_exits_zero(tmp_path):
+    from typer.testing import CliRunner
+
+    from jobhunt.cli import app as cli_app
+
+    missing = tmp_path / "conference_funding.md"
+    result = CliRunner().invoke(cli_app, ["conferences", "--path", str(missing)])
+    assert result.exit_code == 0
+    assert "copy data/conference_funding.example.md to data/conference_funding.md" in result.output
+    assert not missing.exists()
+
+
+def test_example_conference_file_parses():
+    rows = conference.parse_conference_markdown(
+        conference.DEFAULT_CONFERENCE_PATH.with_name("conference_funding.example.md")
+    )
+    assert len(rows) == 3
+    assert rows[0]["recur_days"] == 30
+    assert rows[1]["recur_days"] is None
+    assert all(r["program"] and r["due_at"] for r in rows)

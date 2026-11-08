@@ -82,9 +82,12 @@ autoapply:
 
 schedule-install-autoapply:
 	@echo "Installing com.jobhunt.autoapply.plist -> ~/Library/LaunchAgents (daily 19:00 'make autoapply' run)."
-	@echo "This job SUBMITS applications on its own (Greenhouse/Lever/Ashby, 100/day cap). It installs only"
+	@echo "By default this job runs in handoff mode: it fills Greenhouse/Lever/Ashby forms (100/day cap) and"
+	@echo "leaves each one open for the candidate to click Submit. It clicks Submit itself only in click mode"
+	@echo "(cfg.handoff=False), which has no CLI flag. It installs only"
 	@echo "once 'autoapply status --require-armed' passes: first 10 dry runs reviewed, then 'autoapply arm'."
-	@echo "Stop it any time with 'autoapply disarm' or by creating data/autoapply/KILL."
+	@echo "Stop it any time with 'autoapply disarm'. data/autoapply/KILL only stops click mode (handoff=False)"
+	@echo "before its next posting; handoff runs (the default) never click Submit and ignore it."
 	@echo "Its launchd env lacks SPEND_OK/OPENROUTER_API_KEY: tailoring runs on the claude CLI, never metered credits."
 	@# the arm check runs first: if it fails, make stops before anything is copied or loaded.
 	uv run python -m jobhunt autoapply status --require-armed

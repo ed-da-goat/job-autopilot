@@ -1,8 +1,8 @@
 """Answers the posting decides, not the candidate, so no stored profile can hold them.
 
-A form asks where he will work (the posting's city), what pay he expects (the
-posting's range), whether he has worked for or applied to the company before
-(the tracker knows) and whether anyone referred him (the contacts table knows).
+A form asks where they will work (the posting's city), what pay they expect (the
+posting's range), whether they have worked for or applied to the company before
+(the tracker knows) and whether anyone referred them (the contacts table knows).
 `posting_answers` reads those from the database and the posting and returns them
 under the semantic keys keys.POSTING_DERIVED_KEYS and salary_expectation, for the
 autoapply lane to merge over the stored answers (its values win).
@@ -29,8 +29,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # whole tailoring stack; a test keeps the two paths equal and others point it at a
 # temporary file.
 MASTER_PATH = REPO_ROOT / "data" / "apply_packs" / "finai" / "master.rm.json"
-# Read-only, gitignored files of the candidate's own words (never written here): his facts decide
-# which tools beyond the resume he confirmed (their "## Skills" block), and his answers file
+# Read-only, gitignored files of the candidate's own words (never written here): their facts decide
+# which tools beyond the resume they confirmed (their "## Skills" block), and their answers file
 # holds two facts no stored key does yet (education_start, over_18). A test keeps FACTS_PATH
 # equal to jobhunt.autotailor's; others point both at temporary files.
 FACTS_PATH = REPO_ROOT / "data" / "facts.local.md"
@@ -376,7 +376,7 @@ def same_company(left: str | None, right: str | None) -> bool:
 
 def _resume_employers() -> list[str] | None:
     """The companies in the master resume's workExperience, or None when the file
-    cannot be read (nothing is known about his employers then)."""
+    cannot be read (nothing is known about their employers then)."""
     try:
         master = json.loads(Path(MASTER_PATH).read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -411,7 +411,7 @@ def _worked_or_applied_here(
     return any(same_company(company, row["company"]) for row in rows)
 
 
-# Tools the resume shows him using without writing the tool's name: a SQL database or an ORM
+# Tools the resume shows them using without writing the tool's name: a SQL database or an ORM
 # over one is SQL (2026-10-27: "SQL experience: Yes" from Postgres, SQLite, SQLAlchemy;
 # data/facts.local.md skills, master resume line 27).
 _SKILL_EVIDENCE = {"sql": ("postgres", "postgresql", "sqlite", "sqlalchemy", "mysql")}
@@ -419,7 +419,7 @@ _SKILL_EVIDENCE = {"sql": ("postgres", "postgresql", "sqlite", "sqlalchemy", "my
 
 def _facts_skills_text() -> str:
     """The "## Skills" block of data/facts.local.md, casefolded ("" when the file or the
-    block is missing): tools the candidate confirmed in his own words (2026-10-27: Pandas, Tableau,
+    block is missing): tools the candidate confirmed in their own words (2026-10-27: Pandas, Tableau,
     Salesforce, HubSpot), on top of what the resume names."""
     try:
         lines = Path(FACTS_PATH).read_text(encoding="utf-8").splitlines()
@@ -481,7 +481,7 @@ _PROP_TRADING_RE = re.compile(r"\bprop(?:rietary)?\s+(?:trading|shop)\b")
 
 def _resume_prop_trading() -> str | None:
     """"No" when the master resume names no proprietary trading experience (the resume is
-    the full record of his work, as for worked_here); None when it names one (a human reads
+    the full record of their work, as for worked_here); None when it names one (a human reads
     the answer) or the file cannot be read."""
     try:
         master = json.loads(Path(MASTER_PATH).read_text(encoding="utf-8"))

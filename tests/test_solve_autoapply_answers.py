@@ -35,7 +35,7 @@ ANSWERS = {
     "how_heard": "Company careers page",
     "salary_expectation": "$85,000",
     "address_street": "12 Example Way",
-    "address_city": "Springfield",
+    "address_city": "Atlanta",
     "address_state": "GA",
     "address_zip": "30000",
 }
@@ -889,7 +889,7 @@ def test_home_address_pieces_each_get_their_part():
     got = solve.resolve(fields, ANSWERS, RESUME, autoapply=False)
     assert [(r.semantic_key, r.value) for r in got] == [
         ("address_street", "12 Example Way"),
-        ("address_city", "Springfield"),
+        ("address_city", "Atlanta"),
         ("address_state", "GA"),
         ("address_zip", "30000"),
     ]
@@ -897,7 +897,7 @@ def test_home_address_pieces_each_get_their_part():
 
 def test_a_lone_whole_address_box_gets_the_whole_address():
     res = _one(_field("Primary Residence Address ✱"))
-    assert res.value == "12 Example Way, Springfield, GA 30000"
+    assert res.value == "12 Example Way, Atlanta, GA 30000"
 
 
 def test_a_whole_address_box_with_a_missing_part_is_asked():
@@ -911,7 +911,7 @@ def test_an_address_box_beside_a_city_box_is_just_the_street():
     got = solve.resolve(fields, ANSWERS, RESUME)
     assert [(r.semantic_key, r.value) for r in got] == [
         ("address_street", "12 Example Way"),
-        ("address_city", "Springfield"),
+        ("address_city", "Atlanta"),
         ("address_state", "GA"),
         ("address_zip", "30000"),
     ]

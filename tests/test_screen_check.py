@@ -517,8 +517,8 @@ def test_the_spend_gate_stops_the_run_with_a_partial_report_and_exit_0(conn, env
 
 
 @pytest.mark.parametrize(("master_text", "message"), [
-    (None, "master resume missing or unreadable"),
-    ("{not json", "master resume missing or unreadable"),
+    (None, "master resume missing or unreadable: copy examples/master.example.rm.json to data/apply_packs/finai/master.rm.json and replace it with your own resume"),
+    ("{not json", "master resume missing or unreadable: copy examples/master.example.rm.json to data/apply_packs/finai/master.rm.json and replace it with your own resume"),
     (json.dumps({"workExperience": []}), "master resume has an unexpected shape"),
 ], ids=["missing", "garbled", "odd-shape"])
 def test_a_master_resume_that_cannot_be_used_stops_the_check(conn, env, master_text, message):

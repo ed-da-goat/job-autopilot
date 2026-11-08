@@ -2,7 +2,7 @@
 
 Two modes:
   - CDP attach (JOBHUNT_CDP_URL set): connect to the candidate's already-running
-    Chrome so he keeps his own profile/session cookies. We never own that
+    Chrome so they keep their own profile/session cookies. We never own that
     browser's lifecycle — on close() we only disconnect.
   - Persistent local profile (default): launch a visible, persistent Chrome
     (or bundled Chromium fallback) so login state survives between runs.
@@ -203,7 +203,7 @@ def close(handle: Any, page: Any, is_cdp: bool) -> None:
     the same page returned alongside it. Never closes the candidate's own browser —
     a CDP session only disconnects (browser.close() on a CDP-connected
     Browser disconnects rather than terminating the remote process), leaving
-    his window and tabs open.
+    their window and tabs open.
     """
     if is_cdp:
         try:

@@ -166,8 +166,8 @@ def test_every_us_state_is_the_postal_code_it_is_listed_with():
     assert len(solve._US_POSTAL_CODES) == 51
     for name, code in solve._US_STATES.items():
         assert code == code.lower() and len(code) == 2
-        assert same_place(f"Springfield, {name}", f"Springfield, {code.upper()}, USA")
-        assert not same_place(f"Springfield, {name}", "Springfield, XX, USA")
+        assert same_place(f"Atlanta, {name}", f"Atlanta, {code.upper()}, USA")
+        assert not same_place(f"Atlanta, {name}", "Atlanta, XX, USA")
 
 
 def test_the_country_trailers_are_the_three_spellings_the_brief_names():

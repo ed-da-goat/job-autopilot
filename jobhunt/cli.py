@@ -205,6 +205,9 @@ def discover(
 @app.command()
 def conferences(path: str = CONFERENCE_PATH_OPTION) -> None:
     """Import/refresh conference funding actions from data/conference_funding.md."""
+    if not Path(path).is_file():
+        print(f"No {path}; copy data/conference_funding.example.md to data/conference_funding.md and edit it.")
+        return
     conn = db_module.connect()
     try:
         count = conference_module.seed_from_file(conn, path)
@@ -1810,7 +1813,7 @@ def init(
     name: str | None = typer.Option(None, "--name", help="Full name."),
     email: str | None = typer.Option(None, "--email", help="Email address."),
     phone: str | None = typer.Option(None, "--phone", help="Phone number."),
-    location: str | None = typer.Option(None, "--location", help='City and state, e.g. "Springfield, ST".'),
+    location: str | None = typer.Option(None, "--location", help='City and state, e.g. "Atlanta, GA".'),
     roles: str | None = typer.Option(None, "--roles", help="Target roles, comma separated."),
     us_authorized: bool | None = typer.Option(
         None, "--us-authorized/--not-us-authorized", help="Authorized to work in the US."
@@ -1829,7 +1832,7 @@ def init(
         name = _ask_text("Full name", name, required=True)
         email = _ask_text("Email", email)
         phone = _ask_text("Phone", phone)
-        location = _ask_text("City, state (e.g. Springfield, ST)", location)
+        location = _ask_text("City, state (e.g. Atlanta, GA)", location)
         roles = _ask_text("Target roles (comma separated)", roles)
         us_authorized = _ask_yes_no("Authorized to work in the US?", us_authorized)
         needs_sponsorship = _ask_yes_no("Will you need visa sponsorship?", needs_sponsorship, default=False)

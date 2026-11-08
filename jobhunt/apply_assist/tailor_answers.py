@@ -7,7 +7,7 @@ most successful agent you've built"). This module NEVER submits, fills, POSTs,
 or auto-checks anything; it only proposes text. The caller (fill.py) is the
 one that turns a draft into a `Resolution(action="fill", draft=True)`. The
 assisted lane leaves a draft for the candidate's per-draft review; the unattended
-handoff lane types it, and the candidate's own Submit click in that tab is his
+handoff lane types it, and the candidate's own Submit click in that tab is their
 approval (spec 2026-10-23-autoapply.md, 2026-10-27 amendment).
 
 Runs on the candidate's Claude subscription through `claude -p`
@@ -123,8 +123,8 @@ _MONTHS = {m: i for i, m in enumerate(
 GROUNDING_RULES = (
     "HARD RULES for every draft, essay or letter. "
     "(1) No motive, cause or lesson claims. Never write that an experience "
-    "'taught me' something, that he learned, realized or discovered "
-    "something from it, or that he did one thing because of another, unless "
+    "'taught me' something, that the candidate learned, realized or discovered "
+    "something from it, or that they did one thing because of another, unless "
     "the facts file states that very reason or lesson. A preference the facts "
     "file states may be stated as a preference and nothing more. "
     "(2) Tense follows the master resume dates. Today's date is given in the "
@@ -140,7 +140,7 @@ GROUNDING_RULES = (
     "Where the constraints section of the facts file limits a claim (no "
     "discovery calls or client demos yet, no completed sale, one production "
     "tenant), the constraint wins over any looser line, and the draft never "
-    "says he talks with, meets or has demoed to clients or customers. "
+    "says the candidate talks with, meets or has demoed to clients or customers. "
     "(5) Never write the words sold, acquired, acquisition, exit or CPA in "
     "any form, and never put a number in a draft that is not written in the "
     "facts file or the resume. "
@@ -151,7 +151,7 @@ GROUNDING_RULES = (
 _SYSTEM_PROMPT = (
     "You draft answers to job-application short-answer/essay questions for "
     "ONE candidate. Two sources, and only these two, state what is true about "
-    "him: the facts file and the master resume, both given below. Nothing "
+    "the candidate: the facts file and the master resume, both given below. Nothing "
     "else is a fact: not general knowledge, not plausible-sounding filler, "
     "and above all not the job description or the employer's stated needs, "
     "which are phrasing and focus only, never a fact about the candidate. "

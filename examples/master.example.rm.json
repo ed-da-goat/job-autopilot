@@ -3,7 +3,7 @@
     "name": "Alex Rivera",
     "email": "alex.rivera@example.com",
     "phone": "555-0100",
-    "location": "Springfield, ST",
+    "location": "Atlanta, GA",
     "website": "",
     "linkedin": "linkedin.com/in/alex-rivera-example"
   },
@@ -12,7 +12,7 @@
     {
       "title": "Operations Analyst",
       "company": "Example Co",
-      "location": "Springfield, ST",
+      "location": "Atlanta, GA",
       "years": "June 2025 - Present",
       "description": [
         "Built an Excel and Python reporting tool that cut month-end close prep from 6 hours to 2 hours for a team of 8",

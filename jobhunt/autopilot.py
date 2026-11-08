@@ -3,7 +3,7 @@ human gate and guarantees every promise stage carries a next action.
 
 No LLM, no network, no spend — pure local SQLite reads/writes. Meant to run
 nightly (via daily.py) or on demand (`uv run python -m jobhunt autopilot`).
-A manually-set next_action is a promise the candidate made to himself and is never
+A manually-set next_action is a promise the candidate made to themselves and is never
 overwritten here.
 """
 

@@ -11,10 +11,10 @@ specs/2026-10-23-autoapply.md). Safety model, fail closed throughout:
 - Handoff mode (`live=True, handoff=True`, what the lane uses by default) NEVER
   clicks: it lifts the guard, writes the marker (status `handed_off`), brings the
   page to the front and waits, read-only, for the candidate to click Submit and clear
-  any human check himself. A confirmation page makes it `submitted`; a timeout
+  any human check themselves. A confirmation page makes it `submitted`; a timeout
   or a closed page leaves `handed_off` (not confirmed sent). In this mode an
   AI-drafted essay or cover letter typed into the form is not a blocker: the candidate's
-  Submit click in that tab is his approval of it (spec 2026-10-23-autoapply.md,
+  Submit click in that tab is their approval of it (spec 2026-10-23-autoapply.md,
   2026-10-27 amendment). Each tab's line in the handoff list and the notification
   says how many fields were drafted and their questions, and `write_drafts` puts
   every draft in the run's `drafts.md`. Click mode still blocks on any draft.
@@ -1019,7 +1019,7 @@ def _digest_blockers(digest: TriageDigest, handoff: bool = False) -> list[str]:
     """`handoff`: the candidate's own Submit click is the approval of any drafted answer, so a
     draft is not a blocker (a draft that failed to type still blocks through the
     required-field checks below). Click mode keeps the rule that nothing AI-drafted is
-    ever submitted without him."""
+    ever submitted without them."""
     blockers: list[str] = []
     for res in digest.residual:
         if _is_required(res.field):
@@ -1430,7 +1430,7 @@ def drafted_questions(digest: Any) -> list[str]:
 def write_drafts(audit_root: Path, digest: Any, company: str = "") -> Path | None:
     """Append every AI-drafted answer on this posting (posting id, company, question, the
     answer as drafted) to `<audit_root>/runs/YYYY-MM-DD/drafts.md`, so the candidate can read them
-    before or after he clicks Submit. Returns the file, or None when there is nothing to
+    before or after they click Submit. Returns the file, or None when there is nothing to
     write. Drafts that were not typed (scan-only, a fill error) are included too, marked."""
     # A drafted file upload (the cover-letter PDF) is skipped: its value is a path, and
     # cover_letter.draft_cover_letter already logged the letter text in this same file.

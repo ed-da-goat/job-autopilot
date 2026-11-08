@@ -8,7 +8,7 @@ the pipeline never clicks Submit (cfg.handoff, on by default). It lifts the subm
 writes the `handed_off` marker and leaves the page open in its own tab (nothing waits yet). When
 cfg.handoff_stack forms are open, or the loop ends, the whole stack goes to the candidate at once: one
 list, one macOS notification, then a read-only wait (apply_assist/submit.py `await_handoffs`) for
-him to click Submit and clear any human check himself. A confirmation page records `submitted`; a
+them to click Submit and clear any human check themselves. A confirmation page records `submitted`; a
 closed page, or no tab resolving for cfg.handoff_timeout_min, leaves `handed_off` (not confirmed
 sent). The caps count a form when it is filled; its digest line and needs-you entry come after
 the wait. The old click-once path is still in
@@ -17,8 +17,8 @@ the run is dry: fill, gate, screenshot, never click, never hand off.
 
 Essays and cover letters (handoff mode only; 2026-10-27): textarea questions the answer
 bank cannot fill are drafted on the Claude subscription (apply_assist/tailor_answers.py, grounded
-in data/facts.local.md and the master resume) and typed into the form. His Submit click in that
-tab is his approval of them: the gate does not block on a draft in handoff mode, the handoff list
+in data/facts.local.md and the master resume) and typed into the form. Their Submit click in that
+tab is their approval of them: the gate does not block on a draft in handoff mode, the handoff list
 and notification name every drafted question, and every draft goes to runs/<date>/drafts.md. A
 form with an AI policy on it gets no drafts (the essays go to needs-you). Click mode (handoff
 False) never drafts and its gate still blocks on any draft.
@@ -82,8 +82,8 @@ TAILORED_PDF_NAME = f"{eligibility.resume_basename()}.pdf"
 
 ALLOWED_ATS = ("greenhouse", "lever", "ashby")
 BLOCKED_DAYS = 7
-# The candidate opened or pre-filled a posting himself in this many days: he may have submitted
-# it by hand in his own browser, so auto-apply leaves it alone (same events apply-queue skips).
+# The candidate opened or pre-filled a posting themselves in this many days: they may have submitted
+# it by hand in their own browser, so auto-apply leaves it alone (same events apply-queue skips).
 HAND_WORKED_DAYS = 30
 HAND_WORKED_ACTIONS = ("apply_lite_open", "apply_assist_fill")
 GOTO_TIMEOUT_MS = 45_000
@@ -526,9 +526,9 @@ def _dry_posting_ids(state: dict[str, Any]) -> list[int]:
 
 
 def _hand_worked(conn: sqlite3.Connection, posting_id: int, now: datetime) -> bool:
-    """The candidate opened or pre-filled this posting himself lately (activity_events).
+    """The candidate opened or pre-filled this posting themselves lately (activity_events).
 
-    He may have submitted it by hand in his own browser, which no marker or
+    They may have submitted it by hand in their own browser, which no marker or
     applications row records until the confirmation email is scanned in.
     """
     cutoff = (now - timedelta(days=HAND_WORKED_DAYS)).isoformat()
@@ -1129,7 +1129,7 @@ class _Run:
                 raise _PageError(f"HTTP {code} on the application page; the posting may be closed")
             # Essay and cover-letter drafting (subscription, grounded in the resume and the
             # facts file) is a handoff-lane feature only: the candidate's Submit click in the tab is
-            # his approval of a draft. Click mode never drafts, and its call is unchanged.
+            # their approval of a draft. Click mode never drafts, and its call is unchanged.
             draft_lane = (
                 {"tailor": True, "type_drafts": True, "audit_root": self.root}
                 if self.cfg.handoff

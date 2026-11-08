@@ -11,7 +11,7 @@ Two independent checks, both fail-closed:
    catches drift regardless of which layer introduced it. "sold"/"acquired"/
    "exit" would each be a completed-sale claim (the candidate's venture is pre-revenue with no
    signed client); "CPA" would attribute a credential the candidate does not hold;
-   em dashes read as machine-written and are banned in prose under his name.
+   em dashes read as machine-written and are banned in prose under their name.
 """
 
 from __future__ import annotations

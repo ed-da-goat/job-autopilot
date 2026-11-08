@@ -61,3 +61,6 @@ PROFILE.md
 
 # Frontend build output: regenerate with `make ui-build`
 jobhunt/web/static/spa/
+
+# Personal conference-funding action queue (copy data/conference_funding.example.md)
+data/conference_funding.md

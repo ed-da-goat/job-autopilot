@@ -12,7 +12,7 @@
 full_name: Alex Rivera
 email: alex.rivera@example.com
 phone: [FILL]
-location: Springfield, ST — open to relocation, SF/NYC included
+location: Atlanta, GA — open to relocation, SF/NYC included
 linkedin: https://www.linkedin.com/in/alex-rivera-example/
 github: [FILL]
 portfolio: [FILL]

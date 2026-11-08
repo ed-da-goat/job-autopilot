@@ -10,14 +10,14 @@ contact:
   github: github.com/alex-rivera-example
 education:
   - school: Example State University, College of Business
-    location: Springfield, ST
+    location: Atlanta, GA
     degree: Bachelor of Science in Business Administration, Finance concentration
     dates: Dec 2026
 experience:
   - id: exco
     company: Example Co
     title: Operations Analyst
-    location: Springfield, ST
+    location: Atlanta, GA
     dates: Jun 2025 - Present
     bullets:
       - id: exco-1

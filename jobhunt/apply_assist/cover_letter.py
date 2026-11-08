@@ -9,7 +9,7 @@ rendered to `<Candidate_Name>_Cover_Letter.pdf` in
 
 It NEVER fills, uploads, submits or sends anything: fill.run_assist calls
 `draft_cover_letter` in the handoff lane only and uploads the PDF as a draft. In the
-unattended handoff lane the candidate's own Submit click in the tab is his approval
+unattended handoff lane the candidate's own Submit click in the tab is their approval
 of the letter (spec 2026-10-23-autoapply.md, 2026-10-27 amendment), so every
 letter is also appended to `runs/<date>/drafts.md`, the file the essays go to.
 

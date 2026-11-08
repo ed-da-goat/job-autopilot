@@ -81,7 +81,7 @@ SEMANTIC_KEYS: frozenset[str] = frozenset(
         # a $15,000 desired bonus (beside the $85,000 salary, solve._salary_answer).
         "government_employment",
         "bonus_expectation",
-        # The follow-up "what type of sponsorship": N/A when his stored sponsorship
+        # The follow-up "what type of sponsorship": N/A when their stored sponsorship
         # answer is No (solve._sponsorship_type_answer), never a stored value.
         "sponsorship_type",
         # Decided from the posting itself, never stored (posting_answers.py):
@@ -249,9 +249,9 @@ _WHOLE_ADDRESS_RE = re.compile(
 # A bare "City" (also "Town"): a city of the address only when the form also asks
 # for a street, state or zip (solve.py reads the neighbours).
 _BARE_CITY_RE = re.compile(r"^[\s*✱†]*(?:city|town|city\s*/\s*town)" + _ADDRESS_END)
-# "Legal name", "Legal (full) name": the name on his ID. "Legal first name" and
+# "Legal name", "Legal (full) name": the name on their ID. "Legal first name" and
 # "Legal last name" already name first_name and last_name. A legal name of a
-# company or school is that company's, not his.
+# company or school is that company's, not theirs.
 _LEGAL_NAME_RE = re.compile(
     r"^(?![\s\S]*\b(?:company|employer|business|organi[sz]ation|school|institution"
     r"|entity|firm)\b)"
@@ -314,7 +314,7 @@ _YEARS_SINCE_GRADUATION_RE = re.compile(
     + _QUESTION_END
 )
 # The candidate's standing answers (2026-10-26): camera on for video interviews is Yes, no
-# notice period is required, and he has no years of M&A experience.
+# notice period is required, and they have no years of M&A experience.
 #
 # Keeping the camera on: the camera or webcam with the on / keep / leave / turn-on
 # wording. A consent to being recorded ("I consent to my video interview being
@@ -389,7 +389,7 @@ _DEFENSE_WORK_RE = re.compile(
 # Employment?", "Are you a current or former U.S. government employee?", "Have you
 # ever been employed by the federal government?". A security clearance, a
 # sponsorship, a contract, a relative who works there and a lobbying question name
-# nothing: those are not the question (and a clearance is a fact he has not stated).
+# nothing: those are not the question (and a clearance is a fact they have not stated).
 _US_GOVERNMENT = (
     r"(?:the\s+)?(?:" + _US + r"|us|u\s?s|united\s+states|federal)\s+"
     r"(?:federal\s+)?(?:government|govt?\.?)"
@@ -408,7 +408,7 @@ _GOV_EMPLOYMENT_RE = re.compile(
 # A desired or target bonus ("Desired bonus", "Target annual bonus", "Bonus
 # expectations"), not the pay itself (a label naming salary, base, total pay or OTE is
 # the salary's) and not a one-time bonus (sign-on, retention, referral, relocation) or
-# a bonus he has now or had.
+# a bonus they have now or had.
 _BONUS_EXPECTATION_RE = re.compile(
     r"^(?![\s\S]*\b(?:salary|salaries|base|total|ote|pay|wage|wages|sign(?:ing)?[\s-]*on"
     r"|retention|referral|relocation|current|currently|previous|last|past|prior"
@@ -440,7 +440,7 @@ _WEEKLY_FREQUENCY = (
 _NOT_ABOUT_EXPERIENCE = r"^(?![\s\S]*\b(?:experience|years?)\b)"
 # It needs an ability or willingness phrase before the verb, and it is not a fact
 # question ("Do you currently work in an office?", "Did you work in person at your last
-# job?") or a commute question (whether he can commute is his to answer).
+# job?") or a commute question (whether they can commute is theirs to answer).
 _ONSITE_WORKING_RE = re.compile(
     _NOT_ABOUT_EXPERIENCE
     + r"(?![\s\S]*\b(?:currently|did\s+you|have\s+you|last|previous\w*)\b)"
@@ -464,7 +464,7 @@ _ONSITE_EXPECTATIONS_RE = re.compile(
     r"\bwork\s+location\s+expectations?\b"
 )
 # "commute" wordings ("able to easily commute to the location") are deliberately
-# not here: whether he can commute is his to answer.
+# not here: whether they can commute is theirs to answer.
 _ONSITE_DAYS_COMMUTE_RE = re.compile(
     _NOT_ABOUT_EXPERIENCE
     + r"(?=[\s\S]*\b\d+(?:\s*[-–]\s*\d+)?\s*days?\s*(?:a|per|each|/)\s*(?:week|wk)"
@@ -481,8 +481,8 @@ _ONSITE_FREQUENCY_RE = re.compile(
 )
 # A commute that names its days a week ("Are you willing and able to commute to our
 # New York City office 3 times per week?"). The candidate approved any hybrid schedule and
-# relocating to be within an hour of the office (2026-10-26), so he can answer Yes;
-# a commute question with no days a week named stays his to answer.
+# relocating to be within an hour of the office (2026-10-26), so they can answer Yes;
+# a commute question with no days a week named stays theirs to answer.
 _ONSITE_COMMUTE_DAYS_RE = re.compile(
     _NOT_ABOUT_EXPERIENCE
     + r"[\s\S]*?\b(?:able|willing|open|comfortable|fine|okay|ok|can\s+you)\b[^?.]*?"
@@ -716,7 +716,7 @@ _KEY_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("first_name", re.compile(r"first.?name")),
     ("last_name", re.compile(r"last.?name")),
     ("full_name", re.compile(r"full.?name")),
-    # "Legal name" is the full name on his ID (the packet's "stored full name is
+    # "Legal name" is the full name on their ID (the packet's "stored full name is
     # the legal name"); "Legal first name" and "Legal last name" already hit the
     # first and last name patterns above.
     ("full_name", _LEGAL_NAME_RE),
@@ -818,12 +818,12 @@ _KEY_SLOT["prior_relationship"] = _KEY_SLOT["referred"]
 # question is not asking for. "Have you been enrolled in WorldQuant University
 # in the past 12 months?" hit `university`, and the unattended lane typed the
 # school name into a yes/no question. A wrong answer goes out under the candidate's
-# name; a block only sends the posting to his needs-you list. So the label's
+# name; a block only sends the posting to their needs-you list. So the label's
 # shape decides which keys it may name, and a label that matches anything
 # other than exactly one of them names nothing.
 
 # A yes/no question can only be asking about these; every other stored answer
-# is a noun ("Example University", "Springfield") that cannot answer it.
+# is a noun ("Example University", "Atlanta") that cannot answer it.
 YES_NO_KEYS: frozenset[str] = frozenset(
     {
         "work_authorization",
@@ -1392,7 +1392,7 @@ def _subsume(keys: list[str]) -> list[str]:
 
 def _names_a_work_place(field: FieldSpec) -> bool:
     """True when the label asks where the applicant will work ("From where do you
-    intend to work?", "Payroll location"): the posting's place, not his."""
+    intend to work?", "Payroll location"): the posting's place, not theirs."""
     return bool(_WORK_LOCATION_RE.search(_label_text(field)))
 
 
@@ -1538,7 +1538,7 @@ _PLAIN_RESIDENCE_LABELS = frozenset(
 
 
 def asks_where_you_are(field: FieldSpec) -> bool:
-    """True when `field` asks where the applicant himself is, in a wording that
+    """True when `field` asks where the applicant is, in a wording that
     leaves the size of the answer open: "Where are you currently located?",
     "Where do you live?", or a plain "Location" / "Current location".
 

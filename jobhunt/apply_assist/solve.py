@@ -47,7 +47,7 @@ _NO_OPTION = "stored value matches 0 or >1 options"
 # label is a legal acknowledgment (a consent, certification, acknowledgment,
 # agreement, privacy notice, terms or an arbitration agreement) and that names a legal
 # object (or is a bare "I acknowledge") is checked; a box that claims a fact about
-# him (a license, citizenship, clearance, years, commute, conviction) is asked. An
+# them (a license, citizenship, clearance, years, commute, conviction) is asked. An
 # OPTIONAL box (marketing, SMS, talent community, sharing) is left unchecked, and
 # so is a required box that is really one of those. This is wording only: the
 # scans show most required checkboxes are the options of a group ("Yes", "No",
@@ -78,7 +78,7 @@ _ACK_OPTION_RE = re.compile(
 )
 
 # A bare acknowledgment ("I acknowledge", "I affirm and agree"): the box names no
-# fact about him, only assent to the text the form shows beside it.
+# fact about them, only assent to the text the form shows beside it.
 _BARE_ACKNOWLEDGMENT_RE = re.compile(
     r"^[\s*\u2731]*(?:i\s+|we\s+)?(?:(?:hereby\s+)?(?:acknowledg\w*|agree\w*|accept\w*"
     r"|affirm\w*|certif\w*|consent\w*|confirm\w*|understand|attest\w*)"
@@ -86,9 +86,9 @@ _BARE_ACKNOWLEDGMENT_RE = re.compile(
     r"[\s*\u2731.!]*$"
 )
 
-# A box that claims a fact about the candidate is his to answer, whatever legal word it
+# A box that claims a fact about the candidate is theirs to answer, whatever legal word it
 # carries. "I have read and understood" and "I have provided accurate information"
-# claim nothing about him and are exempt from the "I have" pattern.
+# claim nothing about them and are exempt from the "I have" pattern.
 _FACT_CLAIM_RE = re.compile(
     r"\bi(?:'m|\s+am)\b"
     r"|\bi(?:'ve|\s+have)\s+(?!read\b|reviewed\b|received\b|been\s+(?:informed|provided"
@@ -101,13 +101,13 @@ _FACT_CLAIM_RE = re.compile(
     r"|\bmisdemeanor\w*|\bnon[\s-]*compete\b|\byears?\s+of\b|\b\d+\s*\+?\s*years?\b"
     r"|\bexperience\b|\bresid(?:e|ent|ency)\b|\bsafe\s+sender\b|\bmarked\b"
     # A commitment to relocate, to a work arrangement, to travel or to a schedule is
-    # his to make, even when it rides in a legal acknowledgment.
+    # theirs to make, even when it rides in a legal acknowledgment.
     r"|\brelocat\w*|\bon[\s-]?site\b|\bin[\s-]office\b|\bin[\s-]person\b"
     r"|\btravel\w*|\d+\s*%|\bavailab\w*|\b\d+\s*days?\b"
 )
 
 # "I certify that I have not knowingly withheld any information ..." certifies that what
-# he gave is complete: it claims nothing about him, so it is no fact claim and it is a
+# they gave is complete: it claims nothing about them, so it is no fact claim and it is a
 # legal object. The phrase is cut out before the fact-claim patterns read the label.
 _COMPLETE_INFO_RE = re.compile(
     r"\b(?:have|has)\s+not\s+(?:(?:knowingly|intentionally|willfully|wilfully|deliberately)\s+)?"
@@ -118,7 +118,7 @@ _COMPLETE_INFO_RE = re.compile(
 )
 
 # "... I am agreeing to be bound by the terms of the Arbitration Agreement" assents to
-# the text beside the box; it claims nothing about him. Cut out like the phrase above.
+# the text beside the box; it claims nothing about them. Cut out like the phrase above.
 _ASSENT_RE = re.compile(
     r"\bi\s+(?:am\s+agreeing|am\s+consenting|agree|consent)\s+"
     r"(?:to\s+be\s+bound\s+by|to\s+the\s+terms|to\s+abide\s+by)\b"
@@ -126,7 +126,7 @@ _ASSENT_RE = re.compile(
 
 
 # "... or for immediate discharge if I am employed" is a consequence the certification
-# attaches to a misstatement, not a statement about him. Only the conditional "if I am
+# attaches to a misstatement, not a statement about them. Only the conditional "if I am
 # employed/hired/..." is cut out; a bare "I am employed" stays a fact claim.
 _IF_EMPLOYED_RE = re.compile(
     r"\bif\s+i\s+am\s+(?:later\s+|subsequently\s+|ever\s+|ultimately\s+)?"
@@ -148,7 +148,7 @@ _WITHHELD_RE = re.compile(
 
 # Boxes that are optional in every form seen and that the candidate leaves unchecked even
 # when a form marks one required: marketing, SMS, a talent community or future
-# openings, and sharing his data with other companies.
+# openings, and sharing their data with other companies.
 _OPTIONAL_KIND_RE = re.compile(
     r"\b(?:marketing|promotion\w*|newsletters?|sms|text\s+messag\w*|whats\s*app"
     r"|talent\s+(?:community|network|pool)|job\s+alerts?"
@@ -200,7 +200,7 @@ def _is_required_acknowledgment(field: FieldSpec) -> bool:
 #
 # 2026-10-24: a REQUIRED gender, race, veteran or disability question is
 # answered with its decline option; an OPTIONAL one is left blank; a required one
-# with no decline option is his to answer. Pronouns stay his, and so does every
+# with no decline option is theirs to answer. Pronouns stay theirs, and so does every
 # demographic checkbox, and so does every one of these questions in the assist lane.
 # A decline option is recognized by what it says it declines to do ("Decline to
 # self-identify", "I don't wish to answer", "Prefer not to say"); a substantive
@@ -237,7 +237,7 @@ def _decline_demographic(field: FieldSpec, key: str) -> Resolution:
         # decline option to point at from here. A one-line box (kind "text") may be
         # one: fill.py opens the menu, reads it, and commits the single option
         # pick_option("decline") names; a box that is no menu fails and is asked.
-        # Any other kind (textarea, file, ...) is his to answer.
+        # Any other kind (textarea, file, ...) is theirs to answer.
         if field.kind == "text":
             return Resolution(
                 field, key, "fill", value=_DECLINE_PLACEHOLDER, option_rule="decline"
@@ -256,9 +256,9 @@ def _decline_demographic(field: FieldSpec, key: str) -> Resolution:
 # --- Standard factual questions (the unattended lane only) -------------------------------
 #
 # 2026-10-26: "you can always auto answer questions". These are the company
-# questions no stored key covers and that block a form when left to him: whether he
-# may be sent SMS/WhatsApp (No), whether he is based in the cities a posting lists,
-# whether his bachelor's is finished, and a pure acknowledgment of a privacy notice
+# questions no stored key covers and that block a form when left to them: whether they
+# may be sent SMS/WhatsApp (No), whether they are based in the cities a posting lists,
+# whether their bachelor's is finished, and a pure acknowledgment of a privacy notice
 # on a list rather than a box. Each reads the label only, runs only for a field
 # classify() named nothing for, and a question addressed to an AI or language model
 # is never answered (_AI_ADDRESSED_RE), nor a field of any other kind than a list,
@@ -282,8 +282,8 @@ _BASED_IN_RE = re.compile(
     r"\bare\s+you\s+(?:currently\s+|now\s+)?(?:based|located|living|residing)\s+in\s+"
     r"(?P<places>[^?.:;(\n]+)"
 )
-# "What country do you currently reside in?": which country he lives in, answered with
-# the stored country. Not a country he would work in, move to or holds a passport of.
+# "What country do you currently reside in?": which country they live in, answered with
+# the stored country. Not a country they would work in, move to or holds a passport of.
 _RESIDENCE_COUNTRY_RE = re.compile(
     r"\b(?:what|which)\s+country\s+(?:do\s+you|are\s+you)\s+(?:currently\s+|now\s+"
     r"|presently\s+)?(?:reside|residing|live|living|located|based)\s+in\b"
@@ -320,7 +320,7 @@ _ACK_EXCLUDED_RE = re.compile(
 # background check, being recorded in an interview, an arbitration agreement and the
 # applicant privacy acknowledgement. _ACK_EXCLUDED_RE keeps the checkbox rule off the
 # first and third; these name them, and nothing else, so the AI policy and a "consider me
-# for future opportunities or portfolio companies" question stay his.
+# for future opportunities or portfolio companies" question stay theirs.
 _CONSENT_WORD = r"\b(?:consent\w*|authori[sz]\w*|agree\w*|acknowledg\w*)\b"
 _NAMED_CONSENT_RES = (
     re.compile(r"\bbackground\s+(?:checks?|screen\w*|investigations?)\b"),
@@ -348,7 +348,7 @@ _NOT_A_CONSENT_RE = re.compile(
 # notice. It names an AI, so it is read BEFORE the AI-addressed guard of _autoapply_question.
 # The company's notice only: a question about whether HE uses AI tools or notetakers ("Do you
 # use AI notetakers?"), a refusal or opt-out wording, and the _NOT_A_CONSENT_RE wordings are
-# asked, as is any label claiming a fact about him.
+# asked, as is any label claiming a fact about them.
 _AI_NOTETAKER_RE = re.compile(
     r"\bnote[\s-]?takers?\b|\bai\s+(?:powered\s+)?(?:transcri\w+|meeting\s+(?:assistants?"
     r"|notes?)|scribes?)\b"
@@ -378,9 +378,9 @@ def _is_ai_notetaker_consent(text: str) -> bool:
 
 # Palantir's required "Please share my resume and contact information with external
 # Palantir partners for job seeking purposes." (Lever, 2026-10-27). 2026-10-27: Yes.
-# Only his own resume, application or contact information shared with the company's partners
+# Only their own resume, application or contact information shared with the company's partners
 # or affiliates for job seeking, recruiting or employment. Privacy, data-processing,
-# background-check, terms and marketing consents are other rules' (or his), and so is a
+# background-check, terms and marketing consents are other rules' (or theirs), and so is a
 # label that does not say what the sharing is for.
 _PARTNER_SHARE_RE = re.compile(
     r"\bshar(?:e|es|ing)\b[^.?]{0,60}\b(?:resume|r\u00e9sum\u00e9|cv|application|contact"
@@ -397,7 +397,7 @@ _PARTNER_EXCLUDED_RE = re.compile(
 
 
 def _is_partner_share_consent(text: str) -> bool:
-    """Whether the label (already plain and clean) asks consent to share his resume or
+    """Whether the label (already plain and clean) asks consent to share their resume or
     contact information with the company's partners for job seeking (see above)."""
     return bool(
         _PARTNER_SHARE_RE.search(text)
@@ -411,7 +411,7 @@ def _is_partner_share_consent(text: str) -> bool:
 
 def _is_named_consent(text: str) -> bool:
     """Whether the label (already plain) is one of the four consents above and no more:
-    no fact about him (_FACT_CLAIM_RE) and no future-opportunities, portfolio-company,
+    no fact about them (_FACT_CLAIM_RE) and no future-opportunities, portfolio-company,
     marketing or withholding wording."""
     if _NOT_A_CONSENT_RE.search(text) or _OPTIONAL_KIND_RE.search(text):
         return False
@@ -425,7 +425,7 @@ def _is_named_consent(text: str) -> bool:
 
 def _stored_city(answers: dict[str, str]) -> str:
     """The stored city: address_city, else the first part of the stored location
-    ("Springfield, GA - open to relocation" is "Springfield")."""
+    ("Atlanta, GA - open to relocation" is "Atlanta")."""
     city = str(answers.get("address_city") or "").strip()
     if not city:
         location = str(answers.get("location") or "").strip()
@@ -494,7 +494,7 @@ def _autoapply_question(field: FieldSpec, answers: dict[str, str]) -> Resolution
     text = _plain(f"{field.label} {field.placeholder}")
     if field.required and _is_ai_notetaker_consent(_clean_text(text)):
         return _picked(field, "consent", "I agree", "acknowledge", [])
-    # A yes/no select or radio asking to share his resume with the company's partners
+    # A yes/no select or radio asking to share their resume with the company's partners
     # (_is_partner_share_consent): the single Yes / "I agree" option. A text box stays asked.
     if (
         field.required
@@ -533,9 +533,9 @@ def _autoapply_question(field: FieldSpec, answers: dict[str, str]) -> Resolution
 
 # --- Factual answers (the unattended lane only) -----------------------------------------
 #
-# 2026-10-27: finish more forms unattended, but only with facts he gave. Each rule
+# 2026-10-27: finish more forms unattended, but only with facts they gave. Each rule
 # below answers a question classify() names nothing for, from one of four sources and no
-# other: his standing answers (data/facts.local.md, "Standing application answers"), the
+# other: their standing answers (data/facts.local.md, "Standing application answers"), the
 # master resume, the stored profile (application_answers) and the tracker (via
 # posting_answers). A rule only reads the label's wording; the answer is a constant that
 # tests/test_standing_answers_drift.py ties to the facts file, or a stored/derived value
@@ -568,7 +568,7 @@ _YES_NO_HINT_RE = re.compile(r"\b(?:if\s+yes|yes\s*/\s*no|yes\s+or\s+no)\b")
 _GENERIC_US_RE = re.compile(
     r"\b(?:(?:for|at|with)\s+us|our\s+(?:company|organi[sz]ation)|(?:this|the)\s+company)\b"
 )
-# He will be in the office: any days a week, the first week in person, relocating to an
+# They will be in the office: any days a week, the first week in person, relocating to an
 # office ("I want to be inside the office", 2026-10-27). A where/which/how-many question,
 # a remote option and a "currently located" compound ("currently located in and able to
 # work in NYC": they live in another city) are not this.
@@ -696,7 +696,7 @@ _PROP_NOT_RE = re.compile(
 # "Are you currently located in (NYC)?", also "...located in and able to work in our NYC
 # office": No, they live elsewhere (2026-10-27; standing working_location). Only a
 # question whose place is New York alone (a list of cities is based_in's), or the "and able
-# to work" compound over a label that names it, is this. A question that offers relocating, another city (Atlanta is his own
+# to work" compound over a label that names it, is this. A question that offers relocating, another city (Atlanta is their own
 # metro) or a distance ("near", "within an hour") is not.
 _LIVES_IN_RE = re.compile(
     r"\b(?:are\s+you\s+(?:currently\s+|now\s+)?(?:located|living|based|residing)"
@@ -712,7 +712,7 @@ _LIVES_IN_NOT_RE = re.compile(
     r"|minutes?|miles?|plan\w*|will\s+you|would\s+you)\b"
 )
 # "Who is your current or most recent employer?" / "What is your current or more recent job
-# title?": a text box about his own present role (standing current_employer, current_title).
+# title?": a text box about their own present role (standing current_employer, current_title).
 _RECENT_ROLE_LEAD = (
     r"^(?:(?:who|what)\s+is\s+|what['’]s\s+|please\s+(?:enter|provide|state|list)\s+|enter\s+)?"
     r"your\s+(?:current|present|latest|(?:most|more)\s+recent|last)"
@@ -725,7 +725,7 @@ _RECENT_TITLE_RE = re.compile(
     _RECENT_ROLE_LEAD + r"(?:job\s+title|title|position|role)\s*(?:[?.:!]|$)"
 )
 # "Are you over 18 / at least 18 years of age / 18 or older?": the stored over_18 (the candidate,
-# 2026-10-27: Yes, he is 21). Only a question about the age alone, or with the proof-of-age
+# 2026-10-27: Yes, they are 21). Only a question about the age alone, or with the proof-of-age
 # rider ("... and have the ability to furnish proof if hired"); any other condition is asked.
 _OVER_18_RE = re.compile(
     r"^(?:are|is)\s+you\s+(?:currently\s+)?(?:"
@@ -873,7 +873,7 @@ def _yes_no_stored(field: FieldSpec, key: str, stored: str) -> Resolution | None
 
 
 def _start_availability(field: FieldSpec, text: str) -> Resolution | None:
-    """"Are you able to start in September 2026?": No when the month named is before his
+    """"Are you able to start in September 2026?": No when the month named is before their
     earliest start (standing earliest_start), Yes when it is that month or later. A before/after
     bound or a question with no month and year is asked."""
     asked = _START_BY_RE.search(text)
@@ -928,7 +928,7 @@ def _lives_in_nyc_answer(field: FieldSpec, text: str, answers: dict[str, str]) -
     if not _LIVES_IN_TAIL_RE.match(text[found.end():].strip()):
         return None
     city = _plain(_stored_city(answers))
-    if not city or _NYC_PLACE_RE.search(city):  # no stored city: the question is his
+    if not city or _NYC_PLACE_RE.search(city):  # no stored city: the question is theirs
         return None
     return _picked(field, "currently_in_nyc", "No", "yes_no", ["No"])
 
@@ -968,7 +968,7 @@ def _startup_answer(field: FieldSpec, text: str) -> Resolution | None:
 
 # "If you have a college degree, what institution(s) did you graduate from?" (a text box) and
 # "Which university are you currently attending or did you last attend?" (a list): the stored school
-# (standing school, education_text). He has not graduated, so the graduate-from question is
+# (standing school, education_text). They have not graduated, so the graduate-from question is
 # answered only when it is conditional on holding a degree, and then with the "expected" text;
 # a list is answered only with its one option for that school, never "Other" (pick_option
 # "school"). A bare "which school did you graduate from?" is asked.
@@ -1032,8 +1032,8 @@ def _state_resident_answer(
 
 
 def _esignature_answer(field: FieldSpec, answers: dict[str, str]) -> Resolution | None:
-    """A box that asks him to type his name to certify he has read a policy, terms or an
-    agreement is his stored full legal name (2026-10-27: allowed). It is tried before
+    """A box that asks them to type their name to certify they have read a policy, terms or an
+    agreement is their stored full legal name (2026-10-27: allowed). It is tried before
     the acknowledgment rule, which would put "I acknowledge" in a box that wants a name.
     A name that certifies a fact (authorization to work, a licence, a conviction) is not it."""
     if field.kind not in ("text", "textarea"):
@@ -1178,7 +1178,7 @@ _ADDRESS_COMPANIONS = frozenset({"street", "whole", "state", "zip"})
 #     exactly one box in the group and it is required. The home metro ranks only
 #     where the stored place is in the home state (so it is the candidate's own metro).
 # A group none of whose boxes ranks, or whose best city has two boxes, is left to the
-# human: nothing guesses which office he would want, and a place that is only near a
+# human: nothing guesses which office they would want, and a place that is only near a
 # city ("Atlanta (Hybrid)", "Remote - Southeast", "Remote - New York") is no place
 # named. The metro is finai.CITY_TIERS' tier-2 Atlanta set. Every other box of the
 # group, and every demographic or consent box, keeps its "ask".
@@ -1198,9 +1198,9 @@ _CITY_SPELLINGS: dict[str, tuple[frozenset[str], str | None]] = {
     "san francisco": (frozenset({"san francisco", "sf"}), "ca"),
 }
 _OFFICE_TITLE_RE = re.compile(r"\b(?:offices?|locations?|cit(?:y|ies))\b")
-# A title that asks where he will NOT work, which offices to leave out, or where he lives
+# A title that asks where they will NOT work, which offices to leave out, or where they live
 # now ("Which of the following cities are you currently located in?"): that is a
-# statement about him, not an office he picks.
+# statement about them, not an office they picks.
 _OFFICE_TITLE_NEGATED_RE = re.compile(
     r"\b(?:not|unwilling|exclud\w*|avoid\w*|except|other\s+than|rather\s+not|currently"
     r"|current|live|living|reside|residing|based|home|located)\b"
@@ -1522,7 +1522,7 @@ def _resolve_one(
     # applied, so a mapper override can never route around them — the
     # mapper only names a field, resolve() still decides what happens to it.
     if key in SENSITIVE_KEYS:
-        # His pronouns are he/him (2026-10-27): a required pronouns question
+        # The standing pronouns are he/him (2026-10-27): a required pronouns question
         # classify() named is answered, a mapper's pick never is.
         if autoapply and not overridden and key == "pronouns" and field.required:
             resolution = _pronouns_answer(field)
@@ -1553,7 +1553,7 @@ def _resolve_one(
                 field, None, "check", reason="required legal acknowledgment"
             )
         # The one box of a required office-location multi-select that ranks highest in
-        # his city order (_office_location_picks); resolve() only passes it for the
+        # their city order (_office_location_picks); resolve() only passes it for the
         # unattended lane.
         if autoapply and office_pick and classified is None:
             return Resolution(
@@ -1609,7 +1609,7 @@ def _resolve_one(
     # step. "Do you have a valid visa?" classifies as None, yet its shape
     # allows every yes/no key: a work_authorization pick would type "Yes" for
     # someone who needs no visa. So that question goes to the user. A key the
-    # posting decides (a work location, whether he has been here before) is
+    # posting decides (a work location, whether they have been here before) is
     # never taken from the mapper either: it names what the posting says, and
     # whether the question asks for it is classify()'s call alone.
     #
@@ -1687,7 +1687,7 @@ def _resolve_one(
         answers = {**answers, key: _autoapply_rule_answers()[key]}
 
     # "Have you applied to <company> before?" (classify names it prior_relationship): when
-    # posting_answers left it out (the company is on his resume or he has applied there),
+    # posting_answers left it out (the company is on their resume or they have applied there),
     # the specific facts it keeps answer it (_prior_answer): Yes only for a submitted
     # application or a job on the resume.
     if (
@@ -1700,7 +1700,7 @@ def _resolve_one(
             answers = {**answers, key: prior}
 
     # "From where do you intend to work?" typed as city and state, with no city from the
-    # posting: his own working-location text (standing working_location).
+    # posting: their own working-location text (standing working_location).
     if (
         autoapply
         and key == "work_location"
@@ -1711,10 +1711,10 @@ def _resolve_one(
     ):
         answers = {**answers, key: _standing().working_location}
 
-    # "When can you start?" typed as a date, with no start date stored: his earliest start
+    # "When can you start?" typed as a date, with no start date stored: their earliest start
     # (standing earliest_start), as the key-less "When could you begin?" already gets. A
     # bare "Start date" box (a job's or a school's dates) is not this: _START_TEXT_RE only
-    # matches a question about when he could begin.
+    # matches a question about when they could begin.
     if (
         autoapply
         and key == "start_date"
@@ -1725,7 +1725,7 @@ def _resolve_one(
     ):
         answers = {**answers, key: _standing().earliest_start_text}
 
-    # The type of sponsorship is N/A when the stored sponsorship is No (he needs none).
+    # The type of sponsorship is N/A when the stored sponsorship is No (they need none).
     # Derived here, not a standing answer in _autoapply_rule_answers(): any other stored
     # sponsorship (Yes, missing, empty) leaves the follow-up asked, and a stored type
     # still wins.
@@ -1788,7 +1788,7 @@ def _short_answer_textarea(
     """Whether a textarea that `key` was named for takes a short stored answer
     after all: a legal name (DRW makes "Legal First Name" a textarea) or a street
     address. A how-did-you-hear box stays a long answer in the assist lane; the
-    unattended lane fills the stored answer (2026-10-24: it is his own
+    unattended lane fills the stored answer (2026-10-24: it is their own
     answer, not a drafted one)."""
     if key in ("first_name", "last_name", "full_name"):
         return is_legal_name_label(field)
@@ -2019,7 +2019,7 @@ def _is_choice(field: FieldSpec) -> bool:
 
 def _yes_no_answer(field, key, answers, company, address_pieces) -> Resolution | None:
     """A stored Yes or No (military service, defense work, office days, whether
-    he has been here before, whether he was referred). A list takes the Yes or No
+    they have been here before, whether they were referred). A list takes the Yes or No
     option, strictly; anything else stored is the ordinary path's."""
     stored = (answers.get(key) or "").strip()
     if stored.casefold() not in ("yes", "no") or not _is_choice(field):
@@ -2185,10 +2185,10 @@ _CONFIRM_RE = re.compile(
 
 
 def _salary_confirm_answer(field, key, answers) -> Resolution | None:
-    """A question that states the role's pay and asks whether he accepts it ("... the
+    """A question that states the role's pay and asks whether they accept it ("... the
     salary for this role is $97,000. Please confirm that this aligns with your desired
     salary"). Its options are answers, not amounts, so the stored salary never goes in.
-    The lowest figure the label states at or above his own floor (the candidate's fallback
+    The lowest figure the label states at or above their own floor (the candidate's fallback
     expectation, posting_answers.default_salary(); never the merged expectation, which in
     the unattended lane is the posting's own range) is a Yes (the one option opening
     with "Yes"); below it, or unreadable, or no single Yes option, is asked. None when
@@ -2316,7 +2316,7 @@ def pick_option(rule: str, args: list[str], options: list[str]) -> str | None:
         ]  # fmt: skip
         return hits[0] if len(hits) == 1 else None
     if rule == "affirm":
-        # A commitment he makes (in the office, relocating, travel): the Yes option, else
+        # A commitment they make (in the office, relocating, travel): the Yes option, else
         # the one affirmative statement of an office-attendance or relocation list, else
         # the one assenting option ("I understand", "I acknowledge").
         return (
@@ -2368,7 +2368,7 @@ def _degree_answer(field, key, answers, company, address_pieces) -> Resolution |
         return None
     label = _plain(f"{field.label} {field.placeholder}")
     if _COMPLETED_DEGREE_RE.search(label):
-        # His degree is not finished: only a single in-progress option is true.
+        # Their degree is not finished: only a single in-progress option is true.
         return _picked(field, key, stored, "in_progress", [])
     if _is_choice(field):
         wanted = _plain(stored)
@@ -2483,7 +2483,7 @@ def _salary_answer(field, key, answers, company, address_pieces) -> Resolution |
 
 _DEFERRED_PAY_RE = re.compile(r"\bdeferred\b|\bnon[\s-]*compete\b|\bnoncompete\b")
 # A pay question that wants a rate or a share, not the annual dollars the candidate stated: an
-# hourly, monthly or weekly figure, or a percent of base. His $85,000 / $15,000 would be
+# hourly, monthly or weekly figure, or a percent of base. Their $85,000 / $15,000 would be
 # the wrong unit there, so it is asked.
 _PAY_OTHER_UNIT_RE = re.compile(
     r"\b(?:hourly|monthly|weekly|bi[\s-]?weekly|daily|percent\w*)\b"
@@ -2779,7 +2779,7 @@ def _plain(text: str) -> str:
 
 PLACE_KEYS = frozenset({"location", "country"})
 
-# The posting's own city (posting_answers): where he would work. A form lists it as
+# The posting's own city (posting_answers): where they would work. A form lists it as
 # "New York, New York, United States" for the stored "New York, NY", so it is matched
 # as a place too.
 JOB_PLACE_KEYS = frozenset({"work_location", "desired_location"})

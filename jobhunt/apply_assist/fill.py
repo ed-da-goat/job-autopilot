@@ -1045,7 +1045,7 @@ def apply_resolutions(
 
     `type_drafts` (the handoff lane only) also types the AI-drafted answers
     (`draft=True`) through the same apply-and-verify path as any other fill.
-    The candidate's own Submit click in that tab is his approval of the text (spec
+    The candidate's own Submit click in that tab is their approval of the text (spec
     2026-10-23-autoapply.md, 2026-10-27 amendment). Without it a draft is never
     typed here.
     """
@@ -1988,7 +1988,7 @@ def run_assist(
     `type_drafts` (default False; the handoff lane only) types each drafted
     answer into its field through the same apply-and-verify path as any other
     fill, instead of leaving it in `TriageDigest.drafts` untyped. The candidate's own
-    Submit click in the handed-off tab is his approval of the text. It takes
+    Submit click in the handed-off tab is their approval of the text. It takes
     effect only with `autoapply` (and `tailor`, which makes the drafts exist).
     Under `autoapply` the drafter runs without the TAILOR_MIN_SCORE gate (see
     _apply_tailoring). Drafts stay listed in `TriageDigest.drafts` either way,

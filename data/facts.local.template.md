@@ -62,20 +62,20 @@ directly asks for it.
 
 ## Work history
 
-- Example Ventures LLC — Founder & Engineer, 2026–Present, Springfield, ST.
+- Example Ventures LLC — Founder & Engineer, 2026–Present, Atlanta, GA.
   Founded an AI consulting company that sells an installed private AI
   assistant to data-sensitive small businesses; sole builder and primary
   outbound operator. See Projects above for the technical detail.
-- Example Co — Financial Advisor Assistant, Jan 2024–Present, Springfield,
-  ST. Streamlined the tax-filing process, cutting preparation time by 30%
+- Example Co — Financial Advisor Assistant, Jan 2024–Present, Atlanta,
+  GA. Streamlined the tax-filing process, cutting preparation time by 30%
   through AI-assisted due diligence. Built Excel models projecting client
   retirement scenarios. Prepared quarterly investment-performance
   reports, improving accuracy/presentation quality by 25%.
 - Student Entrepreneurs Club — Director of Finance, May 2025–Present,
-  Springfield, ST. Manages a $25,000 budget funding student
+  Atlanta, GA. Manages a $25,000 budget funding student
   entrepreneurship initiatives at Example State University. Revamped
   financial reporting, cutting member reimbursement payout time by 50%.
-- Example Retail — Fulfillment Expert, Oct 2021–Jan 2024, Springfield, ST.
+- Example Retail — Fulfillment Expert, Oct 2021–Jan 2024, Atlanta, GA.
   Sustained 100+ items/hour fulfillment on a 20-person team, contributing
   to a 10% increase in on-time shipments, while carrying a full course
   load.

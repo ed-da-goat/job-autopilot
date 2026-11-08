@@ -1,7 +1,7 @@
 """Full-lifecycle domain operations for the local job-search OS.
 
 All external-world actions remain manual. These functions only record local
-state after the candidate acts, or prepare copy-ready text for him to use elsewhere.
+state after the candidate acts, or prepare copy-ready text for them to use elsewhere.
 """
 
 from __future__ import annotations

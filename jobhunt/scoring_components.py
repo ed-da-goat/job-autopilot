@@ -277,7 +277,7 @@ def score_finance_hybrid_bonus(title: str, description: str, rubric: dict) -> in
     """Rubric v8: +points once if the posting carries finance-domain depth signal
     (payments/tax/wealth/trading/banking-infrastructure context, a finance
     degree call-out, or applied-AI-in-finance phrasing) — the "finance
-    degree + shipped AI" hybrid the candidate has stated is his #1 target. Distinct
+    degree + shipped AI" hybrid the candidate has stated is their #1 target. Distinct
     from degree_language_bonus (credits openness to non-CS majors generally,
     not finance-domain content) and from company_signal's fintech
     category_bonus/inferred_vertical path, which already caps at 10 points

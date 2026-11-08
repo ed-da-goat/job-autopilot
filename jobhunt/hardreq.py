@@ -2,7 +2,7 @@
 
 `hard_requirement(title, description, min_years=N)` answers one question without a model call:
 does this posting state a requirement the candidate cannot meet (a law degree, a PhD, a master's with no
-bachelor's route, a license he does not hold, or N+ years of experience)? A tailoring call costs
+bachelor's route, a license they do not hold, or N+ years of experience)? A tailoring call costs
 about 30 seconds, so a posting that can only be dropped afterwards is skipped before it.
 
 It is biased hard toward NOT dropping: a wrongly skipped posting is lost, a kept one costs one
