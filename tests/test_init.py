@@ -161,7 +161,7 @@ def test_doctor_lists_fill_placeholders_after_init(root):
     assert checks["placeholders"].status == "fail"
     joined = "\n".join(checks["placeholders"].items)
     for key in ("github:", "portfolio:", "salary_expectation:", "references:"):
-        assert f"data/answers.local.md" in joined and key in joined
+        assert "data/answers.local.md" in joined and key in joined
     assert "phone:" not in joined  # answered
     assert "work_authorization:" not in joined
     assert checks["example data"].status == "warn"

@@ -13,7 +13,6 @@ stored values are made up. Everything is pure: no browser, no model, no network.
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 import pytest
 

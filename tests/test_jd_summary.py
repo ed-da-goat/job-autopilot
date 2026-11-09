@@ -15,7 +15,6 @@ from pathlib import Path
 
 import pytest
 
-import jobhunt.apply_assist.jd_summary as jd_summary_module
 from jobhunt import db as db_module
 from jobhunt import spend as spend_module
 from jobhunt.apply_assist.jd_summary import summarize_posting

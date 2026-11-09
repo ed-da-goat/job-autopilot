@@ -1039,7 +1039,7 @@ def drafts_files(root):
 
 
 def test_a_handoff_run_asks_the_filler_to_draft_and_type_drafts_and_a_click_run_does_not(conn, root):
-    first = add(conn, company="Globex")
+    add(conn, company="Globex")
     arm_now(root)
     handoff = Rig(conn, root, handoff=True)
     handoff.run()

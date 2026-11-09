@@ -12,7 +12,6 @@ repo has no facts.local.md, so every test here skips with that reason.
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 import pytest
 
