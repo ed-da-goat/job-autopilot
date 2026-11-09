@@ -167,3 +167,23 @@ def test_structured_pass_reason(tmp_path):
         assert tuple(row) == ("passed", "geography", "onsite outside US")
     finally:
         conn.close()
+
+
+def test_follow_up_artifact_signs_with_placeholder_when_no_name(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(lifecycle, "user_preferences", lambda: SimpleNamespace(candidate_name=""))
+    conn = db.connect(tmp_path / "t.db")
+    try:
+        posting_id = _posting(conn)
+        content = lifecycle.create_artifact(conn, posting_id, "follow_up")["content"]
+        assert content == (
+            "Hi [NAME],\n\nI wanted to follow up on my application for New Grad Engineer at Acme. "
+            "I believe my background is a strong fit for the role, and I would be glad to share "
+            "any additional context.\n\nBest,\n[YOUR NAME]"
+        )
+        monkeypatch.setattr(lifecycle, "user_preferences", lambda: SimpleNamespace(candidate_name="Jordan Casey"))
+        thanks = lifecycle.create_artifact(conn, posting_id, "thank_you")["content"]
+        assert thanks.endswith("Best,\nJordan Casey")
+    finally:
+        conn.close()

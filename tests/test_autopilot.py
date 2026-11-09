@@ -47,7 +47,7 @@ def _seed_eligible_assessment(conn, posting_id: int, status: str = "eligible") -
     conn.commit()
 
 
-def _reviewed_variant(conn, label: str = "Founder Engineer 2026") -> int:
+def _reviewed_variant(conn, label: str = "Software Engineer 2026") -> int:
     row = lifecycle_module.save_resume_variant(
         conn, label=label, path=f"resume/{label}.pdf", reviewed=True
     )

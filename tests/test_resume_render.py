@@ -60,7 +60,7 @@ FIXTURE_YAML = textwrap.dedent(
     projects: []
     variants:
       founder_engineer:
-        label: Founder Engineer 2026
+        label: Software Engineer 2026
         summary: Founder-engineer who ships.
         order: [ws-1, ws-2, f755-1, f755-2]
         drop: []

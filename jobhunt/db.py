@@ -367,9 +367,9 @@ CREATE INDEX IF NOT EXISTS idx_sprint_members_sprint ON sprint_members(sprint_id
 INSERT OR IGNORE INTO resume_variants
     (label, path, purpose, reviewed_at, created_at, updated_at)
 VALUES
-    ('Founder Engineer 2026',
+    ('Software Engineer 2026',
      '__DEFAULT_RESUME_PATH__',
-     'Founder-engineer applications; pending the candidate review',
+     'General applications; pending the candidate review',
      NULL, '', '');
 """
 

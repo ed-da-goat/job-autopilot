@@ -56,7 +56,7 @@ Prerequisites:
 
 - [uv](https://docs.astral.sh/uv/) (Python 3.12+ is installed for you)
 - Node and npm: `make demo` builds the web UI on first run
-- For real applications only: Google Chrome (the apply browser) and LibreOffice (`brew install --cask libreoffice`; it turns the tailored resume into a PDF). `jobhunt doctor` checks both.
+- For real applications only: Google Chrome (the apply browser) and LibreOffice (`brew install --cask libreoffice`; it turns the tailored resume into a PDF), and the Claude Code CLI (`claude`) signed in to a Claude subscription, which auto-apply uses to tailor each resume. `jobhunt doctor` checks all three.
 - macOS, only if you want launchd scheduling; the rest is plain Python
 
 ## Make it yours
@@ -85,7 +85,7 @@ Prerequisites:
    - `data/answers.local.md`: your standard form answers. After editing, reload them with `uv run python -m jobhunt apply-profile import`.
    - `data/resume.local.docx`: your resume, in the same layout as `examples/resume.example.docx` (it needs a `SKILLS/INTERESTS` section of `Label:<tab>items` lines). Set `JOBHUNT_RESUME_TEMPLATE` to point somewhere else.
    - `data/apply_packs/finai/master.rm.json`: the structured master resume tailoring rewrites from; start from `examples/master.example.rm.json`.
-   - Optional: copy `data/rubric.local.example.json` to `data/rubric.local.json` to re-weight scoring for your search (the shipped `jobhunt/rubric.json` leans toward fintech and applied AI).
+   - Optional: copy `data/rubric.local.example.json` to `data/rubric.local.json` to re-weight scoring for your search (the shipped `jobhunt/rubric.json` leans toward fintech, applied AI and founder/startup roles; its `founder_leverage` component weighs 25).
 
 3. **Build your database and run the pipeline.**
 
@@ -127,9 +127,9 @@ Prerequisites:
 - Hard caps per day and per company, and `jobhunt autoapply disarm` to go back to dry mode at any time.
 - Personal data stays on disk in gitignored files: `PROFILE.md`, `data/*.local.*`, `data/autoapply/`, `data/apply_packs/`, `data/*.db`, and your resume.
 
-## LLM drafting (optional)
+## LLM drafting
 
-Scoring, dedupe and the funnel need no LLM. Drafting (tailored resumes, cover letters, essay answers) goes through `jobhunt/connectors`:
+Harvest, scoring, dedupe, the funnel and the UI need no LLM. Auto-apply resume tailoring does: it always runs through the `claude` CLI (Claude Code on your own Claude subscription), and `jobhunt doctor` warns when the CLI is missing. Drafting (tailored resumes, cover letters, essay answers) goes through `jobhunt/connectors`:
 
 - `claude_cli`: runs the `claude` CLI on your own subscription, with no metered API credits. Select it with `JOBHUNT_LLM_BACKEND=claude_cli`.
 - `openrouter`: metered. Gated by `SPEND_OK=1` plus `OPENROUTER_API_KEY`, a daily cap of $1.00 and a per-run cap of $0.25 (`jobhunt/spend.py`). Without both variables the call is refused before any network request.

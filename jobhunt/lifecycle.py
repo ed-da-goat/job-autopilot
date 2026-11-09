@@ -11,7 +11,7 @@ import sqlite3
 from datetime import UTC, datetime, timedelta
 
 from jobhunt.apply_assist import profile_store
-from jobhunt.eligibility import latest_assessment, load_preferences
+from jobhunt.eligibility import latest_assessment, load_preferences, user_preferences
 from jobhunt.funnel import PASS_REASONS, ensure_funnel_row, move
 
 TOUCH_KINDS = {"intro_request", "outreach", "follow_up", "reply", "thank_you"}
@@ -342,10 +342,11 @@ def create_artifact(conn: sqlite3.Connection, posting_id: int, kind: str) -> sql
         raise ValueError(f"no posting with id={posting_id}")
     company = posting["company"] or "the company"
     title = posting["title"] or "the role"
+    sign_off = (user_preferences().candidate_name or "").strip() or "[YOUR NAME]"
     templates = {
-        "follow_up": f"Hi [NAME],\n\nI wanted to follow up on my application for {title} at {company}. My founder-engineer background maps closely to the role, and I would be glad to share any additional context.\n\nBest,\nEdward",
+        "follow_up": f"Hi [NAME],\n\nI wanted to follow up on my application for {title} at {company}. I believe my background is a strong fit for the role, and I would be glad to share any additional context.\n\nBest,\n{sign_off}",
         "interview_prep": f"Role: {title} at {company}\n\n1. Why this role?\n2. Three profile-backed stories to use:\n3. Requirements to validate:\n4. Questions for the interviewer:\n5. Risks or gaps to address:",
-        "thank_you": f"Hi [NAME],\n\nThank you for the conversation about the {title} role. I appreciated learning more about [SPECIFIC TOPIC]. [PROFILE-BACKED CONNECTION].\n\nBest,\nEdward",
+        "thank_you": f"Hi [NAME],\n\nThank you for the conversation about the {title} role. I appreciated learning more about [SPECIFIC TOPIC]. [PROFILE-BACKED CONNECTION].\n\nBest,\n{sign_off}",
         "offer_questions": f"Offer review for {title} at {company}\n\n- Decision deadline:\n- Base, bonus, and equity details:\n- Location and start-date expectations:\n- Benefits and time off:\n- Role scope and first-90-day expectations:\n- Questions or terms to clarify:",
     }
     now = _now()

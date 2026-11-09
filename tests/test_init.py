@@ -325,6 +325,24 @@ def test_doctor_reports_a_missing_pdf_converter(root, monkeypatch):
     assert {c.name: c for c in sw.run_doctor(root)}["pdf converter"].detail == "word"
 
 
+def test_doctor_warns_when_the_claude_cli_is_missing(root, monkeypatch, tmp_path):
+    monkeypatch.setenv("JOBHUNT_CLAUDE_BIN", str(tmp_path / "no-such-claude"))
+    checks = sw.run_doctor(root)
+    check = {c.name: c for c in checks}["claude cli"]
+    assert check.status == "warn"
+    assert check.detail == (
+        "not found; auto-apply resume tailoring needs the `claude` CLI (Claude Code on your own "
+        "subscription). Harvest, scoring and the UI work without it"
+    )
+    assert "install Claude Code (https://claude.com/claude-code) for auto-apply tailoring" in sw.next_commands(checks)
+    fake = tmp_path / "claude"
+    fake.write_text("#!/bin/sh\n")
+    fake.chmod(0o755)
+    monkeypatch.setenv("JOBHUNT_CLAUDE_BIN", str(fake))
+    found = {c.name: c for c in sw.run_doctor(root)}["claude cli"]
+    assert found.status == "ok" and found.detail == str(fake)
+
+
 def test_a_dangling_soffice_is_not_a_converter(tmp_path, monkeypatch):
     """A Homebrew cask whose app was deleted leaves a `soffice` that is on PATH and fails."""
     from jobhunt.resume import docx_resume

@@ -9,7 +9,7 @@ from jobhunt.resume import select as vs
 
 _NOW = "2026-07-01T00:00:00+00:00"
 FIN = "Finance x AI 2026"
-FOUNDER = "Founder Engineer 2026"
+FOUNDER = "Software Engineer 2026"
 
 
 def _conn(tmp_path):

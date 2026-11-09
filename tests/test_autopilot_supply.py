@@ -108,7 +108,7 @@ def test_finance_title_gets_finance_variant_when_both_reviewed(tmp_path):
     conn = db_module.connect(tmp_path / "t.db")
     try:
         _seed_answers(conn)
-        founder = _reviewed_variant(conn, "Founder Engineer 2026")
+        founder = _reviewed_variant(conn, "Software Engineer 2026")
         finance = _reviewed_variant(conn, "Finance x AI 2026")
         fin_post = _qualified(conn, "fin", "Quantitative Analyst")
         eng_post = _qualified(conn, "eng", "Founding Engineer")
@@ -126,7 +126,7 @@ def test_finance_title_with_unreviewed_finance_variant_parks(tmp_path):
     conn = db_module.connect(tmp_path / "t.db")
     try:
         _seed_answers(conn)
-        _reviewed_variant(conn, "Founder Engineer 2026")
+        _reviewed_variant(conn, "Software Engineer 2026")
         lifecycle_module.save_resume_variant(
             conn, label="Finance x AI 2026", path="resume/finance.pdf", reviewed=False
         )
@@ -148,7 +148,7 @@ def test_unmapped_title_defaults_to_founder_variant(tmp_path):
     conn = db_module.connect(tmp_path / "t.db")
     try:
         _seed_answers(conn)
-        founder = _reviewed_variant(conn, "Founder Engineer 2026")
+        founder = _reviewed_variant(conn, "Software Engineer 2026")
         _reviewed_variant(conn, "Finance x AI 2026")
         post = _qualified(conn, "log", "Logistics Coordinator")
 

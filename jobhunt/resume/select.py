@@ -39,7 +39,7 @@ RULES: list[tuple[str, str, tuple[str, ...]]] = [
     ),
     (
         "founder_engineer",
-        "Founder Engineer 2026",
+        "Software Engineer 2026",
         (
             "founder",
             "founding",

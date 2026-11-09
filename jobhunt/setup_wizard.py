@@ -37,7 +37,7 @@ PERSONA_MARKER = "Alex Rivera"
 DB_RELATIVE = "data/jobhunt.db"
 # The row db.SCHEMA seeds as the default resume variant. The unattended lane tailors a PDF per
 # posting from the resume below, so the variant only has to exist, point at it and be reviewed.
-DEFAULT_VARIANT_LABEL = "Founder Engineer 2026"
+DEFAULT_VARIANT_LABEL = "Software Engineer 2026"
 DEFAULT_VARIANT_PATH = "data/resume.local.docx"
 REQUIRED_MODULES = ("typer", "fastapi", "uvicorn", "playwright", "yaml", "jinja2", "requests", "gspread")
 
@@ -420,6 +420,21 @@ def _resume_variant_check(root: Path) -> Check:
     return Check("resume variant", "ok", f"{count} reviewed")
 
 
+def _claude_cli_check() -> Check:
+    from jobhunt.connectors.claude_cli import _binary
+
+    binary = _binary()
+    path = Path(binary).expanduser()
+    if path.is_file() and os.access(path, os.X_OK):
+        return Check("claude cli", "ok", str(path))
+    return Check(
+        "claude cli",
+        "warn",
+        "not found; auto-apply resume tailoring needs the `claude` CLI (Claude Code on your own "
+        "subscription). Harvest, scoring and the UI work without it",
+    )
+
+
 def run_doctor(root: Path) -> list[Check]:
     checks: list[Check] = []
 
@@ -476,6 +491,7 @@ def run_doctor(root: Path) -> list[Check]:
     seeded, detail = _db_state(root)
     checks.append(Check("database", "ok" if seeded else "warn", detail if seeded else f"not seeded: {detail}"))
     checks.append(_pdf_converter_check())
+    checks.append(_claude_cli_check())
     checks.append(_answers_check(root))
     checks.append(_resume_variant_check(root))
     return checks
@@ -504,6 +520,8 @@ def next_commands(checks: list[Check]) -> list[str]:
         steps.append("install Node.js, then: make ui-build && make ui")
     if by_name["chrome"].status != "ok":
         steps.append("install Google Chrome (or: uv run playwright install chromium)")
+    if by_name["claude cli"].status != "ok":
+        steps.append("install Claude Code (https://claude.com/claude-code) for auto-apply tailoring")
     return steps
 
 
